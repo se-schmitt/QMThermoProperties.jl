@@ -1,5 +1,8 @@
 module QMIdealModels
 
-# Write your package code here.
+using Clapeyron
+const CL = Clapeyron
+
+include("clapeyron.jl")
 
 end
