@@ -1,7 +1,7 @@
 abstract type QMIdealModel <: IdealModel end
 
 struct QMIdealParam{T1,T2,T3,T4} <: EoSParam
-    νᵢ::SingleParam{Vector{T1}}
+    ν::SingleParam{Vector{T1}}
     σ::SingleParam{T2}
     I::SingleParam{Vector{T3}}
     is_linear::SingleParam{Bool}
@@ -50,7 +50,8 @@ function QMIdeal(components; userlocations=String[], reference_state=nothing, ve
     params = getparams(components, CL.default_locations(QMIdeal); userlocations, 
         ignore_headers=["dipprnumber","inchikey","cas"])
 
-    # 
+    # Load json files
+
 
     _components = CL.format_components
     references = String[""]
@@ -64,13 +65,18 @@ end
 function CL.a_ideal(model::QMIdeal, V, T, z)
     Σz = sum(z)
     res = zero(V+T+first(z))
-    ϱ = ∑z / V
+    V⁻¹ = 1/V
+    ϱ = ∑z * V⁻¹
+
+    ν, σ, I, is_linear, Mw = getfield.(getfield.(Ref(model.params), (:ν,:σ,:I,:is_linear,:Mw)),:values)
 
     @inbounds for i ∈ CL.@comps
-        ln_q_trans = ln_partition_function_trans(model, ϱ, T)
-        ln_q_rot = ln_partition_function_rot(model, T)
-        ln_q_vib = ln_partition_function_vib(model, T)
+        ln_q_trans = ln_partition_function_trans(ϱ, T, Mw[i]/1000)
+        ln_q_rot = ln_partition_function_rot(T, σ[i], I[i], Val(is_linear[i]))
+        ln_q_vib = ln_partition_function_vib(T, ν[i])
+        res -= z[i]*(ln_q_trans + ln_q_rot + ln_q_vib)
+        res += CL.xlogx(z[i],V⁻¹)
     end
 
-    return - (ln_q_trans + ln_q_rot + ln_q_vib)
+    return res
 end
