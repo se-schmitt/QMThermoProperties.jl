@@ -1,17 +1,17 @@
 abstract type QMIdealModel <: IdealModel end
 
-struct QMIdealParam{T1,T2,T3,T4} <: EoSParam
-    ν::SingleParam{Vector{T1}}
-    σ::SingleParam{T2}
-    I::SingleParam{Vector{T3}}
+@kwdef struct QMIdealParam{TF,TI} <: EoSParam
+    ν::SingleParam{Vector{TF}}
+    σ::SingleParam{TI}
+    I::SingleParam{Vector{TF}}
     is_linear::SingleParam{Bool}
     reference_state::ReferenceState
-    Mw::SingleParam{T4}
+    Mw::SingleParam{TF}
 end
 
-struct QMIdeal{T1,T2,T3,T4} <: QMIdealModel 
+struct QMIdeal{TF,TI} <: QMIdealModel 
     components::Vector{String}
-    params::QMIdealParam{T1,T2,T3,T4}
+    params::QMIdealParam{TF,TI}
     references::Vector{String}
 end
 
@@ -49,21 +49,26 @@ function QMIdeal(components; userlocations=String[], reference_state=nothing, ve
     # Get parameters (Mw and smiles)
     params = getparams(components, CL.default_locations(QMIdeal); userlocations, 
         ignore_headers=["dipprnumber","inchikey","cas"])
+    _components = CL.format_components(components)
 
+    return QMIdeal(MolID.(_components, params["canonicalsmiles"]); reference_state, verbose)
+end
+
+QMIdeal(component::AbstractMolID; kwargs...) = QMIdeal([component]; kwargs...)
+function QMIdeal(components::Vector{<:AbstractMolID}; reference_state=nothing, verbose=false)
     # Load json files
+    params = get_qm_params(components)
 
+    references = String["Gond et al., to be published."]
 
-    _components = CL.format_components
-    references = String[""]
-
-    model = QMIdeal(_components, params, references)
+    model = QMIdeal(getfield.(components,:name), params, references)
     CL.set_reference_state!(model, reference_state; verbose)
 
     return model
 end
 
 function CL.a_ideal(model::QMIdeal, V, T, z)
-    Σz = sum(z)
+    ∑z = sum(z)
     res = zero(V+T+first(z))
     V⁻¹ = 1/V
     ϱ = ∑z * V⁻¹
