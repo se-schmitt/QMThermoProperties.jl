@@ -1,6 +1,6 @@
 module QMIdealModels
 
-using ConcreteStructs, JSON, Downloads, RDKitMinimalLib
+using JSON, Downloads, RDKitMinimalLib
 using Clapeyron
 const CL = Clapeyron
 

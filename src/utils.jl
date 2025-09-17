@@ -1,8 +1,8 @@
 abstract type AbstractMolID end
 
-@concrete struct MolID <: AbstractMolID
-    name
-    smiles
+struct MolID{T1,T2} <: AbstractMolID
+    name::T1
+    smiles::T2
     MolID(name, _smiles; canonicalize=true) = begin
         if canonicalize
             mol = get_mol(_smiles)
