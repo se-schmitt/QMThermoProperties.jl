@@ -26,6 +26,6 @@ include("utils.jl")
 include("model.jl")
 include("partition_functions.jl")
 
-export MolID, QMIdeal, @smiles_str
+export QMIdeal, MolID, @mol_str
 
 end

@@ -14,10 +14,19 @@ struct MolID{T1,T2} <: AbstractMolID
     end
 end
 MolID(smiles; canonicalize=true) = MolID(smiles, smiles; canonicalize)
+macro mol_str(str, canonicalize=true)
+    MolID(str; canonicalize)
+end
 
 function get_qm_params(comps::Vector{<:MolID}; T=Float64)
     chaos = load_chaos()
     names = getfield.(comps, :name)
+
+    smiles = getfield.(comps, :smiles)
+    for s in smiles
+        @assert s in keys(chaos) "Molecule with SMILES '$(s)' not found in CHAOS database"
+        @assert !chaos[s]["not_converged"] "Molecule with SMILES '$(s)' marked not converged in the CHAOS database"
+    end
 
     Mw = SingleParam(
         "molecular mass",
@@ -80,6 +89,7 @@ function strip_chaos(raw)
     stripped = Dict{String,Any}()
     field_part = [
         ("MolecularMass",   "general"),
+        ("not_converged",   "general"),
         ("RotConst",        "structural"),
         ("SymNumber",       "structural"),
         ("Frequencies",     "vibrational"),
