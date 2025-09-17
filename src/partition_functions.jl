@@ -10,7 +10,7 @@ function ln_partition_function_rot(T, σ, I, ::Val{false})
     return log(sqrt(π) / σ * (_8π²kB_h² * T)^(3/2) * sqrt(prod(I)))
 end
 
-function ln_partition_function_rot(T, σ, I, ::Val{false})
+function ln_partition_function_rot(T, σ, I, ::Val{true})
     _8π²kB_h² = 8*π^2*CL.k_B/h²/kgm²2uÅ²
     return log(_8π²kB_h² * T * I[1]  / σ)
 end
