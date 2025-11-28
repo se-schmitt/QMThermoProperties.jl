@@ -17,7 +17,8 @@ RDKitMinimalLib = "1.2.0"
 julia = "1.10"
 
 [extras]
+Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Test","Clapeyron"]
