@@ -10,6 +10,7 @@ const c₀ = 299792458.                   # m/s
 const DB_PATH = joinpath(pkgdir(@__MODULE__),"database")
 const CHAOS_PATH = joinpath(DB_PATH,"CHAOS_database.json")
 const CHAOS_URL = "https://raw.githubusercontent.com/gond/CHAOS/main/qm.json"
+CHAOS_DB = nothing
 
 # Conversions
 const dalton = 1.66053906892e-27        # kg

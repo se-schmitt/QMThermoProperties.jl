@@ -19,7 +19,12 @@ macro mol_str(str, canonicalize=true)
 end
 
 function get_qm_params(comps::Vector{<:MolID}; T=Float64)
-    chaos = load_chaos()
+    if isnothing(CHAOS_DB)
+        chaos = load_chaos()
+        global CHAOS_DB = chaos 
+    else
+        chaos = CHAOS_DB
+    end
     names = getfield.(comps, :name)
 
     smiles = getfield.(comps, :smiles)
