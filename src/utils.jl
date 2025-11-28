@@ -24,23 +24,23 @@ function get_qm_params(comps::Vector{<:MolID}; T=Float64)
 
     smiles = getfield.(comps, :smiles)
     for s in smiles
-        @assert s in keys(chaos) "Molecule with SMILES '$(s)' not found in CHAOS database"
-        @assert !chaos[s]["not_converged"] "Molecule with SMILES '$(s)' marked not converged in the CHAOS database"
+        s in keys(chaos) || error("Molecule with SMILES '$(s)' not found in CHAOS database")
+        !chaos[s]["not_converged"] || error("Molecule with SMILES '$(s)' marked not converged in the CHAOS database")
     end
 
     Mw = SingleParam(
-        "molecular mass",
+        "molecular mass in kg mol⁻¹",
         names,
         [T.(chaos[c.smiles]["MolecularMass"]) for c in comps]
     )
     ν = SingleParam(
-        "frequencies",
+        "frequencies in s⁻¹",
         names,
         [T.(chaos[c.smiles]["Frequencies"].*(1e2*c₀)) for c in comps]
     )
     _k = T(CL.h / (8*π^2) * 1e11 / dalton)
     I = SingleParam(
-        "moments of inertia",
+        "moments of inertia in ??",     #TODO
         names,
         [_k ./ T.(chaos[c.smiles]["RotConst"]) for c in comps]
     )
