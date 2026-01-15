@@ -16,13 +16,6 @@ CHAOS_DB = nothing
 const dalton = 1.66053906892e-27        # kg
 const kgm²2uÅ² = 1/1e-20/dalton         # kgm² to uÅ²
 
-function __init__()
-    if !isfile(CHAOS_PATH)
-        download_chaos()
-    end
-    return nothing
-end
-
 include("utils.jl")
 include("model.jl")
 include("partition_functions.jl")

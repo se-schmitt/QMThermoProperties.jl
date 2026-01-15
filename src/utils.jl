@@ -18,6 +18,8 @@ macro mol_str(str, canonicalize=true)
     MolID(str; canonicalize)
 end
 
+canonize_smiles(smiles) = get_smiles(get_mol(smiles))
+
 function get_qm_params(comps::Vector{<:MolID}; T=Float64)
     if isnothing(CHAOS_DB)
         chaos = load_chaos()
@@ -71,28 +73,25 @@ function load_chaos()
     return JSON.parsefile(CHAOS_PATH)
 end
 
-function download_chaos()
-    mkpath(DB_PATH)
+function create_chaos_json(path; do_save=true)
+    filelist = filter(_s -> endswith(_s,".json"), readdir(path))
 
-    @info "Downloading CHAOS database from $(CHAOS_URL)..."
-    
-    # Download to temporary file and save only required parts
-    #TODO update as soon as CHAOS is online
-    # path_tmp = Downloads.download(CHAOS_URL, CHAOS_PATH) 
-    path_tmp = joinpath(DB_PATH,"CHAOS_database_all.json")
-    raw_chaos = JSON.parsefile(path_tmp)
-    stripped_chaos = strip_chaos(raw_chaos)
-    open(CHAOS_PATH, "w") do io 
-        JSON.print(io, stripped_chaos)
+    chaos = Dict{String,Any}()
+    for file in filelist
+        add_mol_to_chaos!(chaos, joinpath(path, file))
     end
-    # rm(path_tmp)
-    
-    @info "CHAOS database saved to $(CHAOS_PATH)."
+
+    if do_save
+        open(CHAOS_PATH, "w") do io 
+            JSON.json(io, chaos; pretty=false)
+        end
+    end
+
+    return chaos
 end
 
-function strip_chaos(raw)
-    stripped = Dict{String,Any}()
-    field_part = [
+function add_mol_to_chaos!(chaos, filepath)
+    name_section = [
         ("MolecularMass",   "general"),
         ("not_converged",   "general"),
         ("RotConst",        "structural"),
@@ -100,8 +99,8 @@ function strip_chaos(raw)
         ("Frequencies",     "vibrational"),
     ]
 
-    for (smiles,body) in raw
-        stripped[smiles] = Dict(field => body[part][field] for (field,part) in field_part)
-    end
-    return stripped
+    mol = JSON.parsefile(filepath)
+    smiles = canonize_smiles(mol["general"]["CanonicalSMILES"])
+    chaos[smiles] = Dict(name => mol[section][name] for (name,section) in name_section)
+    return nothing
 end
