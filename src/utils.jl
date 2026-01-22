@@ -20,7 +20,7 @@ end
 
 canonize_smiles(smiles) = get_smiles(get_mol(smiles))
 
-function get_qm_params(comps::Vector{<:MolID}; T=Float64)
+function get_qm_params(comps::Vector{<:MolID}; T=Float64, vib_correction)
     if isnothing(CHAOS_DB)
         chaos = load_chaos()
         global CHAOS_DB = chaos 
@@ -43,7 +43,7 @@ function get_qm_params(comps::Vector{<:MolID}; T=Float64)
     ν = SingleParam(
         "frequencies in s⁻¹",
         names,
-        [T.(chaos[c.smiles]["Frequencies"].*(1e2*c₀)) for c in comps]
+        [T.(chaos[c.smiles]["Frequencies"].*(1e2*c₀)) for c in comps] .* vib_correction
     )
     _k = T(CL.h / (8*π^2) * 1e11 / dalton)
     I = SingleParam(

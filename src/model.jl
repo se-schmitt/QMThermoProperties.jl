@@ -44,20 +44,20 @@ export QMIdeal
 
 CL.default_locations(::Type{QMIdeal}) = ["properties/identifiers.csv", "properties/molarmass.csv"]
 
-function QMIdeal(components; userlocations=String[], reference_state=nothing, verbose=false)
+function QMIdeal(components; userlocations=String[], reference_state=nothing, verbose=false, vib_correction=0.9546)
 
     # Get parameters (Mw and smiles)
     params = getparams(components, CL.default_locations(QMIdeal); userlocations, 
         ignore_headers=["dipprnumber","inchikey","cas"])
     _components = CL.format_components(components)
 
-    return QMIdeal(MolID.(_components, params["canonicalsmiles"]); reference_state, verbose)
+    return QMIdeal(MolID.(_components, params["canonicalsmiles"]); reference_state, verbose, vib_correction)
 end
 
 QMIdeal(component::AbstractMolID; kwargs...) = QMIdeal([component]; kwargs...)
-function QMIdeal(components::Vector{<:AbstractMolID}; reference_state=nothing, verbose=false)
+function QMIdeal(components::Vector{<:AbstractMolID}; reference_state=nothing, verbose=false, vib_correction=0.9546)
     # Load json files
-    params = get_qm_params(components)
+    params = get_qm_params(components; vib_correction)
 
     references = String["Gond et al., to be published."]
 
