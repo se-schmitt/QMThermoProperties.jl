@@ -4,7 +4,10 @@ using JSON, Downloads, RDKitMinimalLib
 using Clapeyron
 const CL = Clapeyron
 
-const h² = CL.h^2
+const k_B = 1.380649e-23                # J/K
+const N_A = 6.02214076e23               # mol⁻¹
+const h = 6.62607015e-34                # Js
+const h² = h^2
 const c₀ = 299792458.                   # m/s
 
 const DB_PATH = joinpath(pkgdir(@__MODULE__),"database")
