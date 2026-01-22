@@ -45,9 +45,9 @@ function get_qm_params(comps::Vector{<:MolID}; T=Float64, vib_correction)
         names,
         [T.(chaos[c.smiles]["Frequencies"].*(1e2*c₀)) for c in comps] .* vib_correction
     )
-    _k = T(h / (8*π^2) * 1e11 / dalton)
+    _k = T(h / (8*π^2) * 1e-9 / (dalton * 1e-20))
     I = SingleParam(
-        "moments of inertia in ??",     #TODO
+        "moments of inertia in u Å²",     #TODO
         names,
         [_k ./ T.(chaos[c.smiles]["RotConst"]) for c in comps]
     )

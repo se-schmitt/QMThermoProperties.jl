@@ -6,13 +6,11 @@ end
 
 # rotational
 function ln_partition_function_rot(T, σ, I, ::Val{false})
-    _8π²kB_h² = 8*π^2*k_B/h²/kgm²2uÅ²
-    return log(sqrt(π) / σ * (_8π²kB_h² * T)^(3/2) * sqrt(prod(I)))
+    return log(sqrt(π) / σ * (8*π^2*k_B/h² * T)^(3/2) * sqrt(prod(I * (dalton * 1e-20))))
 end
 
 function ln_partition_function_rot(T, σ, I, ::Val{true})
-    _8π²kB_h² = 8*π^2*k_B/h²/kgm²2uÅ²
-    return log(_8π²kB_h² * T * I[1]  / σ)
+    return log(8*π^2*k_B/h² * T * I[1] * (dalton * 1e-20)  / σ)
 end
 
 # vibrational
