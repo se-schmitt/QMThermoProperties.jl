@@ -12,7 +12,7 @@ RDKitMinimalLib = "44044271-7623-48dc-8250-42433c44e4b7"
 [compat]
 Clapeyron = "0.6.14"
 Downloads = "1.6.0"
-JSON = "1"
+JSON = "0.21.4,1"
 RDKitMinimalLib = "1.2.0"
 julia = "1.10"
 
