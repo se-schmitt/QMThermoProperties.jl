@@ -21,22 +21,35 @@ end
     QMIdeal(components;
     userlocations = String[],
     reference_state = nothing,
-    verbose = false)
+    verbose = false,
+    vib_correction=0.9546)
 
 ## Input parameters
-None
+
+- `components`: Components either defined 
+    - by name (requires name to be in the `Clapeyron.jl` or a custom database) or
+    - by SMILES via `MolID`
+- `userlocation`: path of local database or `NamedTuple` defining the parameters
+- `reference-state`: see [`Clapeyron.jl`](https://clapeyronthermo.github.io/Clapeyron.jl/stable/properties/basic/#Reference-States)
+- `vib_correction`: correction factor for vibrational frequencies (see Ref. (1) for details)
 
 ## Description
 Ideal model based on data from quantum mechanical (QM) simulations from *Gond et al. (2025)*.
 
 ## Model Construction Examples
-```
+```julia
+using QMIdealModels
+
 idealmodel = QMIdeal("water")
 idealmodel = QMIdeal(["water","carbon dioxide"])
+
+idealmodel = QMIdeal(MolID("CCCO"))
 ```
 
 ## References
-1. Gond, D., ...
+
+1. D. Gond, J. Arweiler, T. Specht, H. Hasse, and F. Jirasek: CHAOS - A Consistent Large-Scale Database for Sigma-Profiles and Other Molecular Descriptors, (2025), DOI: https://doi.org/10.48550/arXiv.2511.19002.
+
 """
 QMIdeal
 
