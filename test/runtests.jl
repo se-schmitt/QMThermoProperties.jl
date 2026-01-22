@@ -54,6 +54,13 @@ using Test
         heatcap2 = 63.122       # cal (mol K)⁻¹
         entropy2 = 119.721      # cal (mol K)⁻¹
         e_thermal2 = 191.614    # kcal mol⁻¹
+        # 3
+        smiles3 = "O=C=O"
+        model3 = QMIdeal(MolID(smiles3); vib_correction=1.)
+        zpe3 = 31304.7          # J mol⁻¹
+        heatcap3 = 6.774        # cal (mol K)⁻¹
+        entropy3 = 50.983       # cal (mol K)⁻¹
+        e_thermal3 = 9.115      # kcal mol⁻¹
         
         @test zpe1 ≈ helmholtz_energy(model1, p, 1e-6) rtol=1e-4
         @test heatcap1 ≈ isochoric_heat_capacity(model1, p, T) / 4.184 rtol=1e-4
@@ -64,5 +71,10 @@ using Test
         @test heatcap2 ≈ isochoric_heat_capacity(model2, p, T) / 4.184 rtol=1e-4
         @test entropy2 ≈ entropy(model2, p, T) / 4.184 rtol=1e-4
         @test e_thermal2 ≈ internal_energy(model2, p, T) / 4184. rtol=1e-4
+
+        @test zpe3 ≈ helmholtz_energy(model3, p, 1e-6) rtol=1e-4
+        @test heatcap3 ≈ isochoric_heat_capacity(model3, p, T) / 4.184 rtol=1e-4
+        @test entropy3 ≈ entropy(model3, p, T) / 4.184 rtol=1e-4
+        @test e_thermal3 ≈ internal_energy(model3, p, T) / 4184. rtol=1e-4
     end
 end
