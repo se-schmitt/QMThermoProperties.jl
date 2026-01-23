@@ -4,6 +4,7 @@ abstract type QMIdealModel <: IdealModel end
     ν::SingleParam{Vector{TF}}
     σ::SingleParam{TI}
     I::SingleParam{Vector{TF}}
+    ω₀::SingleParam{TI}
     is_linear::SingleParam{Bool}
     reference_state::ReferenceState
     Mw::SingleParam{TF}
@@ -82,19 +83,20 @@ end
 
 function CL.a_ideal(model::QMIdeal, V, T, z)
     ∑z = sum(z)
-    res = zero(V+T+first(z))
-    V⁻¹ = 1/V
-    ϱ = ∑z * V⁻¹
+    x = z ./ ∑z
+    a = zero(V+T+first(z))
 
-    ν, σ, I, is_linear, Mw = getfield.(getfield.(Ref(model.params), (:ν,:σ,:I,:is_linear,:Mw)),:values)
+    ν, σ, I, ω₀, is_linear, Mw = getfield.(getfield.(Ref(model.params), (:ν,:σ,:I,:ω₀,:is_linear,:Mw)),:values)
+    g_el = [1]
 
     @inbounds for i ∈ CL.@comps
-        ln_q_trans = ln_partition_function_trans(ϱ, T, Mw[i]/1000)
+        ln_q_trans = ln_partition_function_trans(z[i]/V, T, Mw[i]/1000)
         ln_q_rot = ln_partition_function_rot(T, σ[i], I[i], Val(is_linear[i]))
         ln_q_vib = ln_partition_function_vib(T, ν[i])
-        res -= z[i]*(ln_q_trans + ln_q_rot + ln_q_vib)
-        res += CL.xlogx(z[i],V⁻¹)
+        ln_q_elec = log(ω₀[i])
+
+        a -= x[i]*(ln_q_trans + ln_q_rot + ln_q_vib + ln_q_elec + 1)
     end
 
-    return res
+    return a*∑z
 end

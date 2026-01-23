@@ -1,7 +1,6 @@
 # translational
-function ln_partition_function_trans(ϱ, T, Mw)
-    _2πkB_NAh² = 2π*k_B/N_A/h²
-    return log((_2πkB_NAh² * Mw * T)^(3/2) / (ϱ*N_A))
+function ln_partition_function_trans(ϱᵢ, T, Mw)
+    return -log((h² / (2π * k_B * Mw/N_A * T))^(3/2) * (ϱᵢ*N_A))
 end
 
 # rotational

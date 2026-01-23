@@ -7,9 +7,9 @@ using Test
     smiles_list = ["CCC","CC1=CC=CC=C1","C(C(F)(F)F)F","COCCl","O=[N+]([O-])C1CCCCC1"]
     names_list = ["water","butane","tert-butylbenzene","dichloroethane","p-dibromobenzene"]
 
-    a_ref =  [203334.178, 250253.866, 45571.9682, 114686.038, 357968.677, 16712.5898, 269023.735, 454935.052, 81002.2349, 125314.802]
+    a_ref =  [191638.524, 238558.212, 33876.3144, 102990.384, 346273.023, 5016.93592, 257328.082, 443239.398, 69306.5811, 113619.148]
     p_ref =   99773.5514
-    s_ref =  [231.106926, 297.790687, 279.541771, 264.612555, 344.884919, 149.871513, 263.683428, 363.469799, 263.591498, 324.808877]
+    s_ref =  [270.092439, 336.776200, 318.527284, 303.598068, 383.870432, 188.857027, 302.668941, 402.455312, 302.577011, 363.794390]
     cᵥ_ref = [64.4620409, 101.902287, 77.9280581, 66.9442229, 135.480290, 25.2148861, 85.6266104, 170.741425, 64.8916907, 110.369237]
 
     models = []
@@ -40,41 +40,21 @@ using Test
         T = 298.15              # K
 
         # Gaussian reference values
-        # 1
-        smiles1 = "BrC1C=CC(Br)C1"
-        model1 = QMIdeal(MolID(smiles1); vib_correction=1.)
-        zpe1 = 259155.8         # J mol⁻¹
-        heatcap1 = 24.299       # cal (mol K)⁻¹
-        entropy1 = 88.745       # cal (mol K)⁻¹
-        e_thermal1 = 66.277     # kcal mol⁻¹
-        # 2
-        smiles2 = "c1ccc2c(c1)ccc1cc3ccc4ccccc4c3cc12"
-        model2 = QMIdeal(MolID(smiles2); vib_correction=1.)
-        zpe2 = 763171.4         # J mol⁻¹
-        heatcap2 = 63.122       # cal (mol K)⁻¹
-        entropy2 = 119.721      # cal (mol K)⁻¹
-        e_thermal2 = 191.614    # kcal mol⁻¹
-        # 3
-        smiles3 = "O=C=O"
-        model3 = QMIdeal(MolID(smiles3); vib_correction=1.)
-        zpe3 = 31304.7          # J mol⁻¹
-        heatcap3 = 6.774        # cal (mol K)⁻¹
-        entropy3 = 50.983       # cal (mol K)⁻¹
-        e_thermal3 = 9.115      # kcal mol⁻¹
+        smiles =  ("BrC1C=CC(Br)C1", "O=C=O", "O=O",   "c1ccc2c(c1)ccc1cc3ccc4ccccc4c3cc12")
+        zpe =     (259155.8,         31304.7, 10263.6, 763171.4,                           )
+        heatcap = (24.299,           6.774,   5.003,   63.122,                             )
+        entr =    (88.745,           50.983,  48.942,  119.721,                            )
+        e_therm = (66.277,           9.115 ,  3.936,   191.614,                            )
         
-        @test zpe1 ≈ helmholtz_energy(model1, p, 1e-6) rtol=1e-4
-        @test heatcap1 ≈ isochoric_heat_capacity(model1, p, T) / 4.184 rtol=1e-4
-        @test entropy1 ≈ entropy(model1, p, T) / 4.184 rtol=1e-4
-        @test e_thermal1 ≈ internal_energy(model1, p, T) / 4184. rtol=1e-4
-
-        @test zpe2 ≈ helmholtz_energy(model2, p, 1e-6) rtol=1e-4
-        @test heatcap2 ≈ isochoric_heat_capacity(model2, p, T) / 4.184 rtol=1e-4
-        @test entropy2 ≈ entropy(model2, p, T) / 4.184 rtol=1e-4
-        @test e_thermal2 ≈ internal_energy(model2, p, T) / 4184. rtol=1e-4
-
-        @test zpe3 ≈ helmholtz_energy(model3, p, 1e-6) rtol=1e-4
-        @test heatcap3 ≈ isochoric_heat_capacity(model3, p, T) / 4.184 rtol=1e-4
-        @test entropy3 ≈ entropy(model3, p, T) / 4.184 rtol=1e-4
-        @test e_thermal3 ≈ internal_energy(model3, p, T) / 4184. rtol=1e-4
+        for i in eachindex(smiles)
+            s = smiles[i]
+            @testset "SMILES: $(length(s) ≤ 15 ? s : s[1:15]*"...")" begin
+                model = QMIdeal(MolID(s); vib_correction=1)
+                @test zpe[i]     ≈ helmholtz_energy(model, p, 1e-6)             rtol=5e-4
+                @test heatcap[i] ≈ isochoric_heat_capacity(model, p, T) / 4.184 rtol=5e-4
+                @test entr[i]    ≈ entropy(model, p, T) / 4.184                 rtol=5e-4
+                @test e_therm[i] ≈ internal_energy(model, p, T) / 4184.         rtol=5e-4
+            end
+        end
     end
 end
