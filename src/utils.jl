@@ -35,34 +35,39 @@ function get_qm_params(comps::Vector{<:MolID}; T=Float64, vib_correction)
         !chaos[s]["not_converged"] || error("Molecule with SMILES '$(s)' marked not converged in the CHAOS database")
     end
 
-    Mw = SingleParam(
-        "molecular mass in kg mol⁻¹",
-        names,
-        [T.(chaos[c.smiles]["MolecularMass"]) for c in comps]
-    )
     ν = SingleParam(
         "frequencies in s⁻¹",
         names,
         [T.(chaos[c.smiles]["Frequencies"].*(1e2*c₀)) for c in comps] .* vib_correction
-    )
-    _k = T(h / (8*π^2) * 1e-9 / (dalton * 1e-20))
-    I = SingleParam(
-        "moments of inertia in u Å²",     #TODO
-        names,
-        [_k ./ T.(chaos[c.smiles]["RotConst"]) for c in comps]
     )
     σ = SingleParam(
         "rotational symmetry number",
         names,
         [chaos[c.smiles]["SymNumber"] for c in comps]
     )
+    _k = T(h / (8*π^2) * 1e-9 / (dalton * 1e-20))
+    I = SingleParam(
+        "moments of inertia in u Å²",
+        names,
+        [_k ./ T.(chaos[c.smiles]["RotConst"]) for c in comps]
+    )
+    ω₀ = SingleParam(
+        "spin multiplicity",
+        names,
+        [chaos[c.smiles]["Multiplicity"] for c in comps]
+    )
     is_linear = SingleParam(
         "molecule is linear",
         names,
         [length(i) == 1 for i in I]
     )
+    Mw = SingleParam(
+        "molecular mass in kg mol⁻¹",
+        names,
+        [T.(chaos[c.smiles]["MolecularMass"]) for c in comps]
+    )
 
-    return QMIdealParam(; Mw, ν, I, σ, is_linear, reference_state=ReferenceState())
+    return QMIdealParam(; ν, I, σ, ω₀, is_linear, reference_state=ReferenceState(), Mw)
 end
 
 function load_chaos()
@@ -74,6 +79,7 @@ function load_chaos()
 end
 
 function create_chaos_json(path; do_save=true)
+    JSON.VERSION ≤ v"1" && error("JSON ≥v1 required for this function!")
     filelist = filter(_s -> endswith(_s,".json"), readdir(path))
 
     chaos = Dict{String,Any}()
@@ -96,6 +102,7 @@ function add_mol_to_chaos!(chaos, filepath)
         ("not_converged",   "general"),
         ("RotConst",        "structural"),
         ("SymNumber",       "structural"),
+        ("Multiplicity",    "electronic"),
         ("Frequencies",     "vibrational"),
     ]
 
