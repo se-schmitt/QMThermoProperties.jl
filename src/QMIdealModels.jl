@@ -12,7 +12,9 @@ const h² = h^2
 const c₀ = 299792458.                   # m/s
 
 const DB_PATH = joinpath(pkgdir(@__MODULE__),"database")
-const CHAOS_PATH = joinpath(DB_PATH,"CHAOS_database.json")
+const CHAOS_PATH_ID = joinpath(DB_PATH,"CHAOS_ID_database.json")
+const CHAOS_PATH_COSMO02 = joinpath(DB_PATH,"CHAOS_COSMO02_database.json")
+const CHAOS_PATH_COSMO10 = joinpath(DB_PATH,"CHAOS_COSMO10_database.json")
 const CHAOS_URL = "https://raw.githubusercontent.com/gond/CHAOS/main/qm.json"
 CHAOS_DB = nothing
 
@@ -24,6 +26,6 @@ include("utils.jl")
 include("idealgas.jl")
 include("partition_functions.jl")
 
-export QMIdeal, MolID, @mol_str
+export QMIdeal
 
 end

@@ -14,8 +14,8 @@ using Test
 
     models = []
     @testset "Constructors" begin
-        for smiles in smiles_list
-            model_i = QMIdeal(MolID(smiles))
+        for (name,smiles) in zip(names_list,smiles_list)
+            model_i = QMIdeal(name, userlocations=(;SMILES=[smiles]))
             @test model_i isa QMIdeal
             push!(models, model_i)
         end
@@ -49,7 +49,7 @@ using Test
         for i in eachindex(smiles)
             s = smiles[i]
             @testset "SMILES: $(length(s) ≤ 15 ? s : s[1:15]*"...")" begin
-                model = QMIdeal(MolID(s); vib_correction=1)
+                model = QMIdeal(s; userlocations=(;SMILES=[s]), vib_correction=1)
                 @test zpe[i]     ≈ helmholtz_energy(model, p, 1e-6)             rtol=5e-4
                 @test heatcap[i] ≈ isochoric_heat_capacity(model, p, T) / 4.184 rtol=5e-4
                 @test entr[i]    ≈ entropy(model, p, T) / 4.184                 rtol=5e-4
