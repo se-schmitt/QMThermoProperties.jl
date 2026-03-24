@@ -1,6 +1,6 @@
 module QMIdealModels
 
-using JSON, Downloads, RDKitMinimalLib
+using JSON, Downloads, RDKitMinimalLib, SparseArrays
 using Clapeyron
 const CL = Clapeyron
 
@@ -25,7 +25,8 @@ const kgm²2uÅ² = 1/1e-20/dalton         # kgm² to uÅ²
 include("utils.jl")
 include("idealgas.jl")
 include("partition_functions.jl")
+include("cosmosac.jl")
 
-export QMIdeal
+export QMIdeal, COSMOSAC02_CHAOS, COSMOSAC10_CHAOS
 
 end

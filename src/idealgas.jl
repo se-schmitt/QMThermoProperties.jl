@@ -76,10 +76,10 @@ function QMIdeal(components;
 
     # Load CHAOS db (if not already loaded)
     if isnothing(CHAOS_DB)
-        chaos = load_chaos()
-        global CHAOS_DB = chaos
+        chaos = load_chaos_id()
+        global CHAOS_DB_ID = chaos
     else
-        chaos = CHAOS_DB
+        chaos = CHAOS_DB_ID
     end
     
     # Check availability
