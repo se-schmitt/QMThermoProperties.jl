@@ -10,6 +10,7 @@ const R = k_B * N_A
 const h = 6.62607015e-34                # Js
 const h² = h^2
 const c₀ = 299792458.                   # m/s
+const a0 = 5.29177210545e-11            # Bohr radius
 
 const DB_PATH = joinpath(pkgdir(@__MODULE__),"database")
 const CHAOS_PATH_ID = joinpath(DB_PATH,"CHAOS_ID_database.json")

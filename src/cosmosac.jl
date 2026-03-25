@@ -55,8 +55,8 @@ function COSMOSAC02_CHAOS(components;
     _Pi = [zeros(51) for i in 1:length(_components)]
     
     for (i,s) in enumerate(smiles)
-        _A[i] = chaos[s]["CavArea"]
-        _V[i] = chaos[s]["CavVolume"]
+        _A[i] = chaos[s]["CavArea"] * a0^2 / 1e-20
+        _V[i] = chaos[s]["CavVolume"] * a0^3 / 1e-30
         setindex!.(Ref(_Pi[i]), chaos[s]["Sigma_total"]["val"], chaos[s]["Sigma_total"]["idx"])
     end
     A = SingleParam("A",_components,_A)
@@ -131,11 +131,11 @@ function COSMOSAC10_CHAOS(components;
     _POT = [zeros(51) for i in 1:length(components)]
     
     for (i,s) in enumerate(smiles)
-        _A[i] = chaos[s]["CavArea"]
-        _V[i] = chaos[s]["CavVolume"]
-        setindex!.(Ref(_Pnhb[i]), chaos[s]["Sigma_NHB"]["val"], chaos[s]["Sigma_NHB"]["idx"])
-        setindex!.(Ref(_POH[i]), chaos[s]["Sigma_OH"]["val"], chaos[s]["Sigma_OH"]["idx"])
-        setindex!.(Ref(_POT[i]), chaos[s]["Sigma_OT"]["val"], chaos[s]["Sigma_OT"]["idx"])
+        _A[i] = chaos[s]["CavArea"] * a0^2 / 1e-20
+        _V[i] = chaos[s]["CavVolume"] * a0^3 / 1e-30
+        setindex!.(Ref(_Pnhb[i]), chaos[s]["Sigma_NHB"]["val"].*_A[i], chaos[s]["Sigma_NHB"]["idx"])
+        setindex!.(Ref(_POH[i]), chaos[s]["Sigma_OH"]["val"]  .*_A[i], chaos[s]["Sigma_OH"]["idx"])
+        setindex!.(Ref(_POT[i]), chaos[s]["Sigma_OT"]["val"]  .*_A[i], chaos[s]["Sigma_OT"]["idx"])
     end
     A = SingleParam("A",_components,_A)
     V = SingleParam("V",_components,_V)
