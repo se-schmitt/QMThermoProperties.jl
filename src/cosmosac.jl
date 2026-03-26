@@ -133,9 +133,10 @@ function COSMOSAC10_CHAOS(components;
     for (i,s) in enumerate(smiles)
         _A[i] = chaos[s]["CavArea"] * a0^2 / 1e-20
         _V[i] = chaos[s]["CavVolume"] * a0^3 / 1e-30
-        setindex!.(Ref(_Pnhb[i]), chaos[s]["Sigma_NHB"]["val"].*_A[i], chaos[s]["Sigma_NHB"]["idx"])
-        setindex!.(Ref(_POH[i]), chaos[s]["Sigma_OH"]["val"]  .*_A[i], chaos[s]["Sigma_OH"]["idx"])
-        setindex!.(Ref(_POT[i]), chaos[s]["Sigma_OT"]["val"]  .*_A[i], chaos[s]["Sigma_OT"]["idx"])
+        _f = chaos[s]["Fraction_PartSigmas"]
+        setindex!.(Ref(_Pnhb[i]), chaos[s]["Sigma_NHB"]["val"].*_A[i].*_f[1], chaos[s]["Sigma_NHB"]["idx"])
+        setindex!.(Ref(_POH[i]), chaos[s]["Sigma_OH"]["val"].*_A[i].*_f[2], chaos[s]["Sigma_OH"]["idx"])
+        setindex!.(Ref(_POT[i]), chaos[s]["Sigma_OT"]["val"].*_A[i].*_f[3], chaos[s]["Sigma_OT"]["idx"])
     end
     A = SingleParam("A",_components,_A)
     V = SingleParam("V",_components,_V)

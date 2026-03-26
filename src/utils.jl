@@ -50,12 +50,12 @@ end
 
 function add_mol_to_chaos_id!(chaos, filepath)
     name_section = [
-        ("MolecularMass",   "general"),
-        ("not_converged",   "general"),
-        ("RotConst",        "structural"),
-        ("SymNumber",       "structural"),
-        ("Multiplicity",    "electronic"),
-        ("Frequencies",     "vibrational"),
+        ("MolecularMass", "general"),
+        ("not_converged", "general"),
+        ("RotConst", "structural"),
+        ("SymNumber", "structural"),
+        ("Multiplicity", "electronic"),
+        ("Frequencies", "vibrational"),
     ]
 
     return _add_mol_to_chaos!(chaos, filepath, name_section)
@@ -63,10 +63,10 @@ end
 
 function add_mol_to_chaos_cosmo02!(chaos, filepath)
     name_section = [
-        ("MolecularMass",   "general"),
-        ("CavArea",         "solvation"),
-        ("CavVolume",       "solvation"),
-        ("Sigma_total",     "solvation"),
+        ("MolecularMass", "general"),
+        ("CavArea", "solvation"),
+        ("CavVolume", "solvation"),
+        ("Sigma_total", "solvation"),
     ]
 
     return _add_mol_to_chaos!(chaos, filepath, name_section)
@@ -74,12 +74,13 @@ end
 
 function add_mol_to_chaos_cosmo10!(chaos, filepath)
     name_section = [
-        ("MolecularMass",   "general"),
-        ("CavArea",         "solvation"),
-        ("CavVolume",       "solvation"),
-        ("Sigma_NHB",       "solvation"),
-        ("Sigma_OH",        "solvation"),
-        ("Sigma_OT",        "solvation"),
+        ("MolecularMass", "general"),
+        ("CavArea", "solvation"),
+        ("CavVolume", "solvation"),
+        ("Fraction_PartSigmas","solvation"),
+        ("Sigma_NHB", "solvation"),
+        ("Sigma_OH", "solvation"),
+        ("Sigma_OT", "solvation"),
     ]
 
     return _add_mol_to_chaos!(chaos, filepath, name_section)
