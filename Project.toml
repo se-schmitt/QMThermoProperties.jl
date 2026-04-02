@@ -18,7 +18,7 @@ Clapeyron = "0.6.14"
 Downloads = "1.6.0"
 JSON = "0.21.4,1"
 RDKitMinimalLib = "1.2.0"
-SparseArrays = "1.12.0"
+SparseArrays = "1"
 julia = "1.10"
 
 [extras]
