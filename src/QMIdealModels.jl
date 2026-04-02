@@ -23,7 +23,8 @@ const kgm²2uÅ² = 1/1e-20/dalton         # kgm² to uÅ²
 include("utils.jl")
 include("model.jl")
 include("partition_functions.jl")
+include("properties.jl")
 
-export QMIdeal, MolID, @mol_str
+export QMIdeal, MolID, @mol_str, zpe
 
 end
