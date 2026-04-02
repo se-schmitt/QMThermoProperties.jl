@@ -27,9 +27,7 @@ end
 
 ## Input parameters
 
-- `components`: Components either defined 
-    - by name (requires name to be in the `Clapeyron.jl` or a custom database) or
-    - by SMILES via `MolID`
+- `components`: Component names
 - `userlocation`: path of local database or `NamedTuple` defining the parameters
 - `reference-state`: see [`Clapeyron.jl`](https://clapeyronthermo.github.io/Clapeyron.jl/stable/properties/basic/#Reference-States)
 - `vib_correction`: correction factor for vibrational frequencies (see Ref. (1) for details)
@@ -44,7 +42,7 @@ using QMIdealModels
 idealmodel = QMIdeal("water")
 idealmodel = QMIdeal(["water","carbon dioxide"])
 
-idealmodel = QMIdeal(MolID("CCCO"))
+idealmodel = QMIdeal(smiles"CCCO")
 ```
 
 ## References
@@ -58,24 +56,76 @@ export QMIdeal
 
 CL.default_locations(::Type{QMIdeal}) = ["properties/identifiers.csv", "properties/molarmass.csv"]
 
-function QMIdeal(components; userlocations=String[], reference_state=nothing, verbose=false, vib_correction=0.9546)
+function QMIdeal(components; 
+    userlocations=String[], 
+    reference_state=nothing, 
+    verbose=false, 
+    vib_correction=0.9546
+)
 
-    # Get parameters (Mw and smiles)
-    params = getparams(components, CL.default_locations(QMIdeal); userlocations, 
-        ignore_headers=["dipprnumber","inchikey","cas"])
     _components = CL.format_components(components)
+    
+    _params = CL.getparams(components,CL.default_locations(QMIdeal);
+        userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles", "Mw"])
 
-    return QMIdeal(MolID.(_components, params["canonicalsmiles"]); reference_state, verbose, vib_correction)
-end
+    smiles = [
+        _params["canonicalsmiles"].ismissingvalues[i] ?
+        canonicalize.(_params["SMILES"].values[i]) :
+        _params["canonicalsmiles"].values[i]
+    for i in eachindex(_components)]
 
-QMIdeal(component::AbstractMolID; kwargs...) = QMIdeal([component]; kwargs...)
-function QMIdeal(components::Vector{<:AbstractMolID}; reference_state=nothing, verbose=false, vib_correction=0.9546)
-    # Load json files
-    params = get_qm_params(components; vib_correction)
+    # Load CHAOS db (if not already loaded)
+    if isnothing(CHAOS_DB)
+        chaos = load_chaos_id()
+        global CHAOS_DB_ID = chaos
+    else
+        chaos = CHAOS_DB_ID
+    end
+    
+    # Check availability
+    for s in smiles
+        s in keys(chaos) || error("Molecule with SMILES '$(s)' not found in CHAOS database")
+        !chaos[s]["not_converged"] || error("Molecule with SMILES '$(s)' marked not converged in the CHAOS database")
+    end
+
+    # Create QM parameters
+    ν = SingleParam(
+        "frequencies in s⁻¹",
+        _components,
+        [chaos[s]["Frequencies"].*(1e2*c₀) for s in smiles] .* vib_correction
+    )
+    σ = SingleParam(
+        "rotational symmetry number",
+        _components,
+        [chaos[s]["SymNumber"] for s in smiles]
+    )
+    _k = h / (8*π^2) * 1e-9 / (dalton * 1e-20)
+    I = SingleParam(
+        "moments of inertia in u Å²",
+        _components,
+        [_k ./ chaos[s]["RotConst"] for s in smiles]
+    )
+    ω₀ = SingleParam(
+        "spin multiplicity",
+        _components,
+        [chaos[s]["Multiplicity"] for s in smiles]
+    )
+    is_linear = SingleParam(
+        "molecule is linear",
+        _components,
+        [length(i) == 1 for i in I]
+    )
+    Mw = SingleParam(
+        "molecular mass in kg mol⁻¹",
+        _components,
+        [chaos[s]["MolecularMass"] for s in smiles]
+    )
+
+    params = QMIdealParam(; ν, I, σ, ω₀, is_linear, reference_state=ReferenceState(), Mw)
 
     references = String["Gond et al., to be published."]
 
-    model = QMIdeal(getfield.(components,:name), params, references)
+    model = QMIdeal(_components, params, references)
     CL.set_reference_state!(model, reference_state; verbose)
 
     return model

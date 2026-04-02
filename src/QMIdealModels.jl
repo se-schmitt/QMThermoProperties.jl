@@ -1,6 +1,6 @@
 module QMIdealModels
 
-using JSON, Downloads, RDKitMinimalLib
+using JSON, Downloads, RDKitMinimalLib, SparseArrays
 using Clapeyron
 const CL = Clapeyron
 
@@ -10,9 +10,12 @@ const R = k_B * N_A
 const h = 6.62607015e-34                # Js
 const h² = h^2
 const c₀ = 299792458.                   # m/s
+const a0 = 5.29177210545e-11            # Bohr radius
 
 const DB_PATH = joinpath(pkgdir(@__MODULE__),"database")
-const CHAOS_PATH = joinpath(DB_PATH,"CHAOS_database.json")
+const CHAOS_PATH_ID = joinpath(DB_PATH,"CHAOS_ID_database.json")
+const CHAOS_PATH_COSMO02 = joinpath(DB_PATH,"CHAOS_COSMO02_database.json")
+const CHAOS_PATH_COSMO10 = joinpath(DB_PATH,"CHAOS_COSMO10_database.json")
 const CHAOS_URL = "https://raw.githubusercontent.com/gond/CHAOS/main/qm.json"
 CHAOS_DB = nothing
 
@@ -21,10 +24,11 @@ const dalton = 1.66053906892e-27        # kg
 const kgm²2uÅ² = 1/1e-20/dalton         # kgm² to uÅ²
 
 include("utils.jl")
-include("model.jl")
+include("qmideal.jl")
 include("partition_functions.jl")
 include("properties.jl")
+include("cosmosac.jl")
 
-export QMIdeal, MolID, @mol_str, zpe
+export QMIdeal, COSMOSAC02_CHAOS, COSMOSAC10_CHAOS, zpe
 
 end

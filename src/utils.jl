@@ -1,113 +1,103 @@
-abstract type AbstractMolID end
+canonicalize(smiles) = get_smiles(get_mol(smiles))
 
-struct MolID{T1,T2} <: AbstractMolID
-    name::T1
-    smiles::T2
-    MolID(name, _smiles; canonicalize=true) = begin
-        if canonicalize
-            mol = get_mol(_smiles)
-            smiles = get_smiles(mol)
-        else
-            smiles = _smiles
-        end
-        return new{typeof(name),typeof(smiles)}(name, smiles)
-    end
-end
-MolID(smiles; canonicalize=true) = MolID(smiles, smiles; canonicalize)
-macro mol_str(str, canonicalize=true)
-    MolID(str; canonicalize)
-end
-
-canonize_smiles(smiles) = get_smiles(get_mol(smiles))
-
-function get_qm_params(comps::Vector{<:MolID}; T=Float64, vib_correction)
-    if isnothing(CHAOS_DB)
-        chaos = load_chaos()
-        global CHAOS_DB = chaos 
-    else
-        chaos = CHAOS_DB
-    end
-    names = getfield.(comps, :name)
-
-    smiles = getfield.(comps, :smiles)
-    for s in smiles
-        s in keys(chaos) || error("Molecule with SMILES '$(s)' not found in CHAOS database")
-        !chaos[s]["not_converged"] || error("Molecule with SMILES '$(s)' marked not converged in the CHAOS database")
-    end
-
-    ν = SingleParam(
-        "frequencies in s⁻¹",
-        names,
-        [T.(chaos[c.smiles]["Frequencies"].*(1e2*c₀)) for c in comps] .* vib_correction
-    )
-    σ = SingleParam(
-        "rotational symmetry number",
-        names,
-        [chaos[c.smiles]["SymNumber"] for c in comps]
-    )
-    _k = T(h / (8*π^2) * 1e-9 / (dalton * 1e-20))
-    I = SingleParam(
-        "moments of inertia in u Å²",
-        names,
-        [_k ./ T.(chaos[c.smiles]["RotConst"]) for c in comps]
-    )
-    ω₀ = SingleParam(
-        "spin multiplicity",
-        names,
-        [chaos[c.smiles]["Multiplicity"] for c in comps]
-    )
-    is_linear = SingleParam(
-        "molecule is linear",
-        names,
-        [length(i) == 1 for i in I]
-    )
-    Mw = SingleParam(
-        "molecular mass in kg mol⁻¹",
-        names,
-        [T.(chaos[c.smiles]["MolecularMass"]) for c in comps]
-    )
-
-    return QMIdealParam(; ν, I, σ, ω₀, is_linear, reference_state=ReferenceState(), Mw)
-end
-
-function load_chaos()
-    if !isfile(CHAOS_PATH)
-        error("CHAOS database not found at $(CHAOS_PATH)! Download CHAOS database with `QMIdealModels.download_chaos()`")
+function load_chaos_id()
+    if !isfile(CHAOS_PATH_ID)
+        error("CHAOS database not found at $(CHAOS_PATH_ID)! Download CHAOS database with `QMIdealModels.download_chaos()`")
     end
     
-    return JSON.parsefile(CHAOS_PATH)
+    return JSON.parsefile(CHAOS_PATH_ID)
+end
+
+function load_chaos_cosmo02()
+    if !isfile(CHAOS_PATH_COSMO02)
+        error("CHAOS database not found at $(CHAOS_PATH_COSMO02)! Download CHAOS database with `QMIdealModels.download_chaos()`")
+    end
+    
+    return JSON.parsefile(CHAOS_PATH_COSMO02)
+end
+
+function load_chaos_cosmo10()
+    if !isfile(CHAOS_PATH_COSMO10)
+        error("CHAOS database not found at $(CHAOS_PATH_COSMO10)! Download CHAOS database with `QMIdealModels.download_chaos()`")
+    end
+    
+    return JSON.parsefile(CHAOS_PATH_COSMO10)
 end
 
 function create_chaos_json(path; do_save=true)
     JSON.VERSION ≤ v"1" && error("JSON ≥v1 required for this function!")
     filelist = filter(_s -> endswith(_s,".json"), readdir(path))
 
-    chaos = Dict{String,Any}()
+    chaos_id = Dict{String,Any}()
+    chaos_cosmo02 = Dict{String,Any}()
+    chaos_cosmo10 = Dict{String,Any}()
     for file in filelist
-        add_mol_to_chaos!(chaos, joinpath(path, file))
+        add_mol_to_chaos_id!(chaos_id, joinpath(path, file))
+        add_mol_to_chaos_cosmo02!(chaos_cosmo02, joinpath(path, file))
+        add_mol_to_chaos_cosmo10!(chaos_cosmo10, joinpath(path, file))
     end
 
     if do_save
-        open(CHAOS_PATH, "w") do io 
-            JSON.json(io, chaos; pretty=false)
+        for (_chaos, _path) in zip((chaos_id,chaos_cosmo02,chaos_cosmo10),(CHAOS_PATH_ID,CHAOS_PATH_COSMO02,CHAOS_PATH_COSMO10))
+            open(_path, "w") do io 
+                JSON.json(io, _chaos; pretty=false)
+            end
         end
     end
 
-    return chaos
+    return chaos_id, chaos_cosmo02, chaos_cosmo10
 end
 
-function add_mol_to_chaos!(chaos, filepath)
+function add_mol_to_chaos_id!(chaos, filepath)
     name_section = [
-        ("MolecularMass",   "general"),
-        ("not_converged",   "general"),
-        ("RotConst",        "structural"),
-        ("SymNumber",       "structural"),
-        ("Multiplicity",    "electronic"),
-        ("Frequencies",     "vibrational"),
+        ("MolecularMass", "general"),
+        ("not_converged", "general"),
+        ("RotConst", "structural"),
+        ("SymNumber", "structural"),
+        ("Multiplicity", "electronic"),
+        ("Frequencies", "vibrational"),
     ]
 
+    return _add_mol_to_chaos!(chaos, filepath, name_section)
+end
+
+function add_mol_to_chaos_cosmo02!(chaos, filepath)
+    name_section = [
+        ("MolecularMass", "general"),
+        ("CavArea", "solvation"),
+        ("CavVolume", "solvation"),
+        ("Sigma_total", "solvation"),
+    ]
+
+    return _add_mol_to_chaos!(chaos, filepath, name_section)
+end
+
+function add_mol_to_chaos_cosmo10!(chaos, filepath)
+    name_section = [
+        ("MolecularMass", "general"),
+        ("CavArea", "solvation"),
+        ("CavVolume", "solvation"),
+        ("Fraction_PartSigmas","solvation"),
+        ("Sigma_NHB", "solvation"),
+        ("Sigma_OH", "solvation"),
+        ("Sigma_OT", "solvation"),
+    ]
+
+    return _add_mol_to_chaos!(chaos, filepath, name_section)
+end
+
+function _add_mol_to_chaos!(chaos, filepath, name_section)
     mol = JSON.parsefile(filepath)
-    smiles = canonize_smiles(mol["general"]["CanonicalSMILES"])
-    chaos[smiles] = Dict(name => mol[section][name] for (name,section) in name_section)
+    smiles = canonicalize(mol["general"]["CanonicalSMILES"])
+    chaos[smiles] = Dict(name => _save_dict(mol, section, name) for (name,section) in name_section)
     return nothing
+end
+
+function _save_dict(mol, section, name)
+    if startswith(name, "Sigma")
+        _s_arr = sparse(mol[section][name])
+        return Dict("idx" => _s_arr.nzind, "val" => _s_arr.nzval)
+    else
+        return mol[section][name]
+    end
 end
