@@ -24,7 +24,7 @@ const dalton = 1.66053906892e-27        # kg
 const kgm²2uÅ² = 1/1e-20/dalton         # kgm² to uÅ²
 
 include("utils.jl")
-include("idealgas.jl")
+include("qmideal.jl")
 include("partition_functions.jl")
 include("cosmosac.jl")
 
