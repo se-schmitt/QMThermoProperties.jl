@@ -26,8 +26,9 @@ const kgm²2uÅ² = 1/1e-20/dalton         # kgm² to uÅ²
 include("utils.jl")
 include("qmideal.jl")
 include("partition_functions.jl")
+include("properties.jl")
 include("cosmosac.jl")
 
-export QMIdeal, COSMOSAC02_CHAOS, COSMOSAC10_CHAOS
+export QMIdeal, COSMOSAC02_CHAOS, COSMOSAC10_CHAOS, zpe
 
 end
