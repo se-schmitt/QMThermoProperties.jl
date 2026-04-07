@@ -75,7 +75,7 @@ function QMIdeal(components;
     for i in eachindex(_components)]
 
     # Load CHAOS db (if not already loaded)
-    if isnothing(CHAOS_DB)
+    if isnothing(CHAOS_DB_ID)
         chaos = load_chaos_id()
         global CHAOS_DB_ID = chaos
     else
@@ -89,26 +89,27 @@ function QMIdeal(components;
     end
 
     # Create QM parameters
+    _chaos_entries = [chaos[s] for s in smiles]
     ν = SingleParam(
         "frequencies in s⁻¹",
         _components,
-        [chaos[s]["Frequencies"].*(1e2*c₀) for s in smiles] .* vib_correction
+        [_entry["Frequencies"].*(1e2*c₀) for _entry in _chaos_entries] .* vib_correction
     )
     σ = SingleParam(
         "rotational symmetry number",
         _components,
-        [chaos[s]["SymNumber"] for s in smiles]
+        [_entry["SymNumber"] for _entry in _chaos_entries]
     )
     _k = h / (8*π^2) * 1e-9 / (dalton * 1e-20)
     I = SingleParam(
         "moments of inertia in u Å²",
         _components,
-        [_k ./ chaos[s]["RotConst"] for s in smiles]
+        [_k ./ _entry["RotConst"] for _entry in _chaos_entries]
     )
     ω₀ = SingleParam(
         "spin multiplicity",
         _components,
-        [chaos[s]["Multiplicity"] for s in smiles]
+        [_entry["Multiplicity"] for _entry in _chaos_entries]
     )
     is_linear = SingleParam(
         "molecule is linear",
@@ -118,7 +119,7 @@ function QMIdeal(components;
     Mw = SingleParam(
         "molecular mass in kg mol⁻¹",
         _components,
-        [chaos[s]["MolecularMass"] for s in smiles]
+        [_entry["MolecularMass"] for _entry in _chaos_entries]
     )
 
     params = QMIdealParam(; ν, I, σ, ω₀, is_linear, reference_state=ReferenceState(), Mw)

@@ -42,7 +42,7 @@ function COSMOSAC02_CHAOS(components;
     for i in eachindex(_components)]
 
     # Load CHAOS db (if not already loaded)
-    if isnothing(CHAOS_DB)
+    if isnothing(CHAOS_DB_COSMO02)
         chaos = load_chaos_cosmo02()
         global CHAOS_DB_COSMO02 = chaos
     else
@@ -116,7 +116,7 @@ function COSMOSAC10_CHAOS(components;
     for i in eachindex(_components)]
 
     # Load CHAOS db (if not already loaded)
-    if isnothing(CHAOS_DB)
+    if isnothing(CHAOS_DB_COSMO10)
         chaos = load_chaos_cosmo10()
         global CHAOS_DB_COSMO10 = chaos
     else

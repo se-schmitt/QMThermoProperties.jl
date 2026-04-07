@@ -17,7 +17,9 @@ const CHAOS_PATH_ID = joinpath(DB_PATH,"CHAOS_ID_database.json")
 const CHAOS_PATH_COSMO02 = joinpath(DB_PATH,"CHAOS_COSMO02_database.json")
 const CHAOS_PATH_COSMO10 = joinpath(DB_PATH,"CHAOS_COSMO10_database.json")
 const CHAOS_URL = "https://raw.githubusercontent.com/gond/CHAOS/main/qm.json"
-CHAOS_DB = nothing
+CHAOS_DB_ID = nothing
+CHAOS_DB_COSMO02 = nothing
+CHAOS_DB_COSMO10 = nothing
 
 # Conversions
 const dalton = 1.66053906892e-27        # kg
