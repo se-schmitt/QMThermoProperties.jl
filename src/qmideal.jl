@@ -117,7 +117,7 @@ function QMIdeal(components;
         [length(i) == 1 for i in I]
     )
     Mw = SingleParam(
-        "molecular mass in kg mol⁻¹",
+        "molecular mass in g mol⁻¹",
         _components,
         [_entry["MolecularMass"] for _entry in _chaos_entries]
     )
