@@ -60,7 +60,7 @@ function QMIdeal(components;
     userlocations=String[], 
     reference_state=nothing, 
     verbose=false, 
-    vib_correction=0.9546
+    vib_correction=0.95461
 )
 
     _components = CL.format_components(components)
