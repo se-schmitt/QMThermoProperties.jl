@@ -23,7 +23,7 @@ end
     userlocations = String[],
     reference_state = nothing,
     verbose = false,
-    vib_correction=0.9546)
+    vib_correction=0.95461)
 
 ## Input parameters
 
