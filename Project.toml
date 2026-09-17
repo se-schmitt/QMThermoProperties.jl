@@ -7,17 +7,19 @@ authors = ["Sebastian Schmitt <se.s.schmitt@gmail.com> and contributors"]
 Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-RDKitMinimalLib = "44044271-7623-48dc-8250-42433c44e4b7"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
-[sources]
-RDKitMinimalLib = {url = "https://github.com/eloyfelix/RDKitMinimalLib.jl"}
+[weakdeps]
+RDKitMinimalLib = "44044271-7623-48dc-8250-42433c44e4b7"
+
+[extensions]
+RDKitMinimalLibExt = "RDKitMinimalLib"
 
 [compat]
 Clapeyron = "0.6.14"
 Downloads = "1.6.0"
 JSON = "0.21.4,1"
-RDKitMinimalLib = "1.2.0"
+RDKitMinimalLib = "1.2.1"
 SparseArrays = "1"
 julia = "1.10"
 
@@ -27,4 +29,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 
 [targets]
-test = ["Test", "TestItemRunner", "Clapeyron"]
+test = ["Test", "TestItemRunner", "Clapeyron", "RDKitMinimalLib"]

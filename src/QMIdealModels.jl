@@ -1,6 +1,6 @@
 module QMIdealModels
 
-using JSON, Downloads, RDKitMinimalLib, SparseArrays
+using JSON, Downloads, SparseArrays
 using Clapeyron
 const CL = Clapeyron
 

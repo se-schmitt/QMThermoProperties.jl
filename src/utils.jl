@@ -1,5 +1,26 @@
-canonicalize(smiles) = get_smiles(get_mol(smiles))
+# canonicalization
+function _canonicalize_fallback(smiles)
+    @warn """
+    SMILES are not canonicalized by `QMIdealModels.jl`!
+    Either ensure that the used SMILES are canonicalized or load `RDKitMinimalLib.jl` (not working on Windows).
+    """
+    return smiles
+end
 
+const _canonicalize = Ref{Function}(_canonicalize_fallback)
+
+canonicalize(smiles) = _canonicalize[](smiles)
+
+# molecular weight
+_get_mw_fallback(smiles) = error("""
+    No molecular weight found for SMILES '$(smiles)'. Provide it via `userlocations` or load `RDKitMinimalLib.jl` (not working on Windows).
+    """)
+
+const _get_mw = Ref{Function}(_get_mw_fallback)
+
+get_mw(smiles) = _get_mw[](smiles)
+
+# Load databases
 function load_chaos_id()
     if !isfile(CHAOS_PATH_ID)
         error("CHAOS database not found at $(CHAOS_PATH_ID)! Download CHAOS database with `QMIdealModels.download_chaos()`")

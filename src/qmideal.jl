@@ -23,7 +23,7 @@ end
     userlocations = String[],
     reference_state = nothing,
     verbose = false,
-    vib_correction=0.9546)
+    vib_correction=0.95461)
 
 ## Input parameters
 
@@ -60,7 +60,7 @@ function QMIdeal(components;
     userlocations=String[], 
     reference_state=nothing, 
     verbose=false, 
-    vib_correction=0.9546
+    vib_correction=0.95461
 )
 
     _components = CL.format_components(components)
@@ -116,11 +116,12 @@ function QMIdeal(components;
         _components,
         [length(i) == 1 for i in I]
     )
-    Mw = SingleParam(
-        "molecular mass in g mol⁻¹",
-        _components,
-        [_entry["MolecularMass"] for _entry in _chaos_entries]
-    )
+    _Mw = [
+        _params["Mw"].ismissingvalues[i] ?
+        get_mw(_params["SMILES"].values[i]) :
+        _params["Mw"].values[i]
+    for i in eachindex(_components)]
+    Mw = SingleParam("molecular mass in g mol⁻¹", _components, _Mw)
 
     params = QMIdealParam(; ν, I, σ, ω₀, is_linear, reference_state=ReferenceState(), Mw)
 

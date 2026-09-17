@@ -1,5 +1,5 @@
 @testitem "COSMOSAC" begin
-    using Clapeyron
+    using Clapeyron, RDKitMinimalLib
 
     smiles = ["CC1=CC=CC=C1", "CCO"]
     names = ["toluene", "ethanol"]
