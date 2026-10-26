@@ -1,6 +1,6 @@
 module QMIdealModels
 
-using JSON, Downloads, SparseArrays
+using JSON, Downloads, SHA, SparseArrays, Scratch, p7zip_jll
 using Clapeyron
 const CL = Clapeyron
 
@@ -12,14 +12,30 @@ const h² = h^2
 const c₀ = 299792458.                   # m/s
 const a0 = 5.29177210545e-11            # Bohr radius
 
-const DB_PATH = joinpath(pkgdir(@__MODULE__),"database")
-const CHAOS_PATH_ID = joinpath(DB_PATH,"CHAOS_ID_database.json")
-const CHAOS_PATH_COSMO02 = joinpath(DB_PATH,"CHAOS_COSMO02_database.json")
-const CHAOS_PATH_COSMO10 = joinpath(DB_PATH,"CHAOS_COSMO10_database.json")
-const CHAOS_URL = "https://raw.githubusercontent.com/gond/CHAOS/main/qm.json"
+# Raw CHAOS database (~4.3 GB) — only needed to rebuild the converted databases
+const CHAOS_URL = "https://zenodo.org/records/18701299/files/CHAOS_v2.zip?download=1"
+
+# Converted databases (~60 MB), built from the raw data with `download_chaos(; raw=true)`
+const CHAOS_DB_URL = "https://github.com/se-schmitt/QMIdealModels.jl/releases/download/db-v2/CHAOS_v2_databases.zip"
+const CHAOS_DB_SHA256 = "7b57eded570420f416126e62799bf1928416761ed52e26459aad98dd6f8e4c8d"
+
+# Database location (scratch space, filled in `__init__`)
+DB_PATH = ""
+CHAOS_PATH_ID = ""
+CHAOS_PATH_COSMO02 = ""
+CHAOS_PATH_COSMO10 = ""
+
 CHAOS_DB_ID = nothing
 CHAOS_DB_COSMO02 = nothing
 CHAOS_DB_COSMO10 = nothing
+
+function __init__()
+    global DB_PATH = @get_scratch!("CHAOS")
+    global CHAOS_PATH_ID = joinpath(DB_PATH,"CHAOS_ID_database.json")
+    global CHAOS_PATH_COSMO02 = joinpath(DB_PATH,"CHAOS_COSMO02_database.json")
+    global CHAOS_PATH_COSMO10 = joinpath(DB_PATH,"CHAOS_COSMO10_database.json")
+    return nothing
+end
 
 # Conversions
 const dalton = 1.66053906892e-27        # kg

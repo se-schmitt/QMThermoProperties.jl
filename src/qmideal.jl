@@ -52,8 +52,6 @@ idealmodel = QMIdeal(smiles"CCCO")
 """
 QMIdeal
 
-export QMIdeal 
-
 CL.default_locations(::Type{QMIdeal}) = ["properties/identifiers.csv", "properties/molarmass.csv"]
 
 function QMIdeal(components; 
