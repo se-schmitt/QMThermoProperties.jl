@@ -8,19 +8,33 @@ default_locations_cosmo_chaos() = ["properties/identifiers.csv"]
     verbose = false,
     reference_state = nothing)
 
-## Input parameters:
-- `Pi` :Single Parameter{String} 
-- `V`: Single Parameter{Float64}
-- `A`: Single Parameter{Float64}
+## Input parameters
+
+- `SMILES`: Single Parameter (`String`) - SMILES representation of the components (canonicalized using RDKit)
+- `canonicalsmiles`: Single Parameter (`String`) (Optional) - canonical SMILES (RDKit), used instead of `SMILES` if given
+
+## Input models
+
+- `puremodel`: model to calculate pure pressure-dependent properties
 
 ## Description
-An activity coefficient model using molecular solvation based on the COSMO-RS method. Sigma profiles are taken from the CHAOS database (see Gond et al. (2025)).
- 
-## References
-1.  A. Klamt: Conductor-like Screening Model for Real Solvents: A New Approach to the Quantitative Calculation of Solvation Phenomena, J. Phys. Chem. 99 (1995) 2224–2235, DOI: https://doi.org/10.1021/j100007a062.
-2.  S.-T. Lin and S. I. Sandler: A Priori Phase Equilibrium Prediction from a Segment Contribution Solvation Model, Ind. Eng. Chem. Res. 41 (2002) 899–913, DOI: https://doi.org/10.1021/ie001047w.
-3.  D. Gond, J. Arweiler, T. Specht, H. Hasse, and F. Jirasek: CHAOS - A Consistent Large-Scale Database for Sigma-Profiles and Other Molecular Descriptors, (2025), DOI: https://doi.org/10.48550/arXiv.2511.19002.
 
+Constructs a `COSMOSAC02` model (COSMO-SAC 2002) with the parameters (`Pi`, `V`, `A`) taken from the CHAOS database [1].
+See [`COSMOSAC02`](https://clapeyronthermo.github.io/Clapeyron.jl/stable/eos/activity/#Clapeyron.COSMOSAC02) in the Clapeyron.jl documentation for details on the model and its references.
+
+The molecules are identified in CHAOS by their canonical SMILES, which requires `RDKitMinimalLib.jl` to be loaded (unless `canonicalsmiles` is given).
+
+## Model Construction Examples
+```julia
+using QMThermoProperties, Clapeyron, RDKitMinimalLib
+
+model = COSMOSAC02_CHAOS(["toluene","ethanol"])
+model = COSMOSAC02_CHAOS(["toluene","ethanol"]; userlocations = (; SMILES = ["CC1=CC=CC=C1","CCO"]))
+```
+
+## References
+
+1. Gond, D., Arweiler, J., Specht, T., Hasse, H., & Jirasek, F. (2025). CHAOS – A consistent large-scale database for sigma-profiles and other molecular descriptors. arXiv:2511.19002. [doi:10.48550/arXiv.2511.19002](https://doi.org/10.48550/arXiv.2511.19002)
 """
 function COSMOSAC02_CHAOS(components;
     puremodel = PR,
@@ -61,21 +75,33 @@ end
     verbose = false,
     reference_state = nothing)
 
-## Input parameters:
-- `Pnhb` :Single Parameter{String}
-- `POH` :Single Parameter{String}
-- `POT` :Single Parameter{String}
-- `V`: Single Parameter{Float64}
-- `A`: Single Parameter{Float64}
+## Input parameters
+
+- `SMILES`: Single Parameter (`String`) - SMILES representation of the components (canonicalized using RDKit)
+- `canonicalsmiles`: Single Parameter (`String`) (Optional) - canonical SMILES (RDKit), used instead of `SMILES` if given
+
+## Input models
+
+- `puremodel`: model to calculate pure pressure-dependent properties
 
 ## Description
-An activity coefficient model using molecular solvation based on the COSMO-RS method. Sigma profiles are now split by non-hydrogen bonding, hydrogen acceptor and hydrogen donor. Sigma profiles are taken from the CHAOS database (see Gond et al. (2025)).
- 
+
+Constructs a `COSMOSAC10` model (COSMO-SAC 2010) with the parameters (`Pnhb`, `POH`, `POT`, `V`, `A`) taken from the CHAOS database [1].
+See [`COSMOSAC10`](https://clapeyronthermo.github.io/Clapeyron.jl/stable/eos/activity/#Clapeyron.COSMOSAC10) in the Clapeyron.jl documentation for details on the model and its references.
+
+The molecules are identified in CHAOS by their canonical SMILES, which requires `RDKitMinimalLib.jl` to be loaded (unless `canonicalsmiles` is given).
+
+## Model Construction Examples
+```julia
+using QMThermoProperties, Clapeyron, RDKitMinimalLib
+
+model = COSMOSAC10_CHAOS(["toluene","ethanol"])
+model = COSMOSAC10_CHAOS(["toluene","ethanol"]; userlocations = (; SMILES = ["CC1=CC=CC=C1","CCO"]))
+```
+
 ## References
-1.  A. Klamt: Conductor-like Screening Model for Real Solvents: A New Approach to the Quantitative Calculation of Solvation Phenomena, J. Phys. Chem. 99 (1995) 2224–2235, DOI: https://doi.org/10.1021/j100007a062.
-2.  S.-T. Lin and S. I. Sandler: A Priori Phase Equilibrium Prediction from a Segment Contribution Solvation Model, Ind. Eng. Chem. Res. 41 (2002) 899–913, DOI: https://doi.org/10.1021/ie001047w.
-3.  C.-M. Hsieh, S. I. Sandler, and S.-T. Lin: Improvements of COSMO-SAC for Vapor–Liquid and Liquid–Liquid Equilibrium Predictions, Fluid Phase Equilibria 297 (2010) 90–97, DOI: https://doi.org/10.1016/j.fluid.2010.06.011.
-4.  D. Gond, J. Arweiler, T. Specht, H. Hasse, and F. Jirasek: CHAOS - A Consistent Large-Scale Database for Sigma-Profiles and Other Molecular Descriptors, (2025), DOI: https://doi.org/10.48550/arXiv.2511.19002.
+
+1. Gond, D., Arweiler, J., Specht, T., Hasse, H., & Jirasek, F. (2025). CHAOS – A consistent large-scale database for sigma-profiles and other molecular descriptors. arXiv:2511.19002. [doi:10.48550/arXiv.2511.19002](https://doi.org/10.48550/arXiv.2511.19002)
 """
 function COSMOSAC10_CHAOS(components;
     puremodel = PR,

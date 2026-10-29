@@ -1,10 +1,13 @@
 """
-    zpe(model, z=[1.0])
+    zero_point_energy(model::QMIdeal, z=SA[1.])
+    zpe(model::QMIdeal, z=SA[1.])
 
-Calculates the zero-point energy (ZPE) in J of the ideal gas model `model` for the amounts `z` (in mol):
+Default units: `[J]`
 
-```math
-zpe = A_{\rm ideal}(T \rightarrow 0)
+Calculates the zero-point energy (ZPE), defined as:
+
+```julia
+ZPE = A(T → 0) = ∑zᵢN_A∑ₖhνᵢₖ/2
 ```
 """
 function zpe(model, z=CL.SA[1.0])

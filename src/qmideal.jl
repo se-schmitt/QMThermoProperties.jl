@@ -22,32 +22,62 @@ end
     userlocations = String[],
     reference_state = nothing,
     verbose = false,
-    vib_correction=0.95461)
+    vib_correction = 0.95461)
 
 ## Input parameters
 
-- `components`: Component names
-- `userlocations`: path of local database or `NamedTuple` defining the parameters
-- `reference_state`: see [`Clapeyron.jl`](https://clapeyronthermo.github.io/Clapeyron.jl/stable/properties/basic/#Reference-States)
-- `vib_correction`: correction factor for vibrational frequencies (see Ref. (1) for details)
+- `SMILES`: Single Parameter (`String`) - SMILES representation of the components (canonicalized using RDKit)
+- `canonicalsmiles`: Single Parameter (`String`) (Optional) - canonical SMILES (RDKit), used instead of `SMILES` if given
+- `Mw`: Single Parameter (`Float64`) (Optional) - Molecular Weight `[g·mol⁻¹]`, calculated from `SMILES` using RDKit if not given
+
+## Model parameters
+
+- `ν`: Single Parameter (`Vector{Float64}`) - vibrational frequencies `[s⁻¹]`
+- `σ`: Single Parameter (`Int`) - rotational symmetry number
+- `I`: Single Parameter (`Vector{Float64}`) - principal moments of inertia `[u·Å²]` (one value for linear molecules)
+- `ω₀`: Single Parameter (`Int`) - spin multiplicity of the electronic ground state
+- `Mw`: Single Parameter (`Float64`) - Molecular Weight `[g·mol⁻¹]`
 
 ## Description
-Ideal model based on data from quantum mechanical (QM) simulations from *Gond et al. (2025)*.
+
+Ideal gas model based on quantum mechanical (QM) data from the CHAOS database [1].
+The molecular partition function is evaluated in the rigid-rotor/harmonic-oscillator approximation:
+
+```
+A/(nRT) = ∑xᵢ(ln(ρxᵢN_AΛᵢ³) - ln(qᵢ,rot) - ln(qᵢ,vib) - ln(ω₀ᵢ)) - 1
+Λᵢ = h/√(2πmᵢk_BT)
+qᵢ,rot = √π/σᵢ (8π²k_BT/h²)^(3/2) √(Iᵢ,₁Iᵢ,₂Iᵢ,₃)    (nonlinear)
+qᵢ,rot = 8π²k_BTIᵢ/(σᵢh²)                          (linear)
+qᵢ,vib = ∏ₖ exp(-hνᵢₖ/2k_BT)/(1-exp(-hνᵢₖ/k_BT))
+```
+
+The harmonic frequencies from CHAOS are scaled by `vib_correction` (default from [1]).
+The zero-point energy is included in the vibrational contribution (see `zpe`).
+The molecules are identified in CHAOS by their canonical SMILES, which requires `RDKitMinimalLib.jl` to be loaded (unless `canonicalsmiles` is given).
 
 ## Model Construction Examples
 ```julia
-using QMThermoProperties
+using QMThermoProperties, Clapeyron, RDKitMinimalLib
 
-idealmodel = QMIdeal("water")
-idealmodel = QMIdeal(["water","carbon dioxide"])
+# Using the default database
+idealmodel = QMIdeal("water") #single input
+idealmodel = QMIdeal(["water","carbon dioxide"]) #multiple components
+idealmodel = QMIdeal(smiles"CCCO") #by SMILES (Clapeyron database)
 
-idealmodel = QMIdeal(smiles"CCCO")
+# Passing parameters directly
+idealmodel = QMIdeal("propanol"; userlocations = (; SMILES = ["CCCO"]))
+idealmodel = QMIdeal("propanol"; userlocations = (; canonicalsmiles = ["CCCO"], Mw = [60.096]))
+
+# Unscaled vibrational frequencies
+idealmodel = QMIdeal("water"; vib_correction = 1.0)
+
+# As ideal model in an equation of state
+model = PR(["water","ethanol"]; idealmodel = QMIdeal)
 ```
 
 ## References
 
-1. D. Gond, J. Arweiler, T. Specht, H. Hasse, and F. Jirasek: CHAOS - A Consistent Large-Scale Database for Sigma-Profiles and Other Molecular Descriptors, (2025), DOI: https://doi.org/10.48550/arXiv.2511.19002.
-
+1. Gond, D., Arweiler, J., Specht, T., Hasse, H., & Jirasek, F. (2025). CHAOS – A consistent large-scale database for sigma-profiles and other molecular descriptors. arXiv:2511.19002. [doi:10.48550/arXiv.2511.19002](https://doi.org/10.48550/arXiv.2511.19002)
 """
 QMIdeal
 
