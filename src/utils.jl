@@ -46,10 +46,7 @@ function download_chaos(; force=false, raw=false)
 
     raw ? _build_chaos() : _fetch_chaos()
 
-    # invalidate anything loaded from a previous database
-    global CHAOS_DB_ID = nothing
-    global CHAOS_DB_COSMO02 = nothing
-    global CHAOS_DB_COSMO10 = nothing
+    empty!(_chaos_cache)                # invalidate anything loaded from a previous database
 
     @info "CHAOS database ready in $(DB_PATH)."
     return DB_PATH
@@ -140,20 +137,35 @@ end
 
 const _dl_last = Ref(-1.0)
 
-# Load databases
-function _load_chaos(path)
-    if !isfile(path)
-        error("CHAOS database not found at $(path)! Download CHAOS database with `QMIdealModels.download_chaos()`")
-    end
+# Load databases (cached per path)
+const _chaos_cache = Dict{String,Any}()
 
-    return JSON.parsefile(path)
+function load_chaos(path)
+    return get!(_chaos_cache, path) do
+        isfile(path) || error("CHAOS database not found at $(path)! Download CHAOS database with `QMThermoProperties.download_chaos()`")
+        JSON.parsefile(path)
+    end
 end
 
-load_chaos_id() = _load_chaos(CHAOS_PATH_ID)
-load_chaos_cosmo02() = _load_chaos(CHAOS_PATH_COSMO02)
-load_chaos_cosmo10() = _load_chaos(CHAOS_PATH_COSMO10)
+# CHAOS entries of the components, looked up by their (canonicalized) SMILES
+function chaos_entries(chaos, params, n)
+    canon = params["canonicalsmiles"]
+    return map(1:n) do i
+        s = canon.ismissingvalues[i] ? canonicalize(params["SMILES"].values[i]) : canon.values[i]
+        haskey(chaos, s) || error("Molecule with SMILES '$(s)' not found in CHAOS database")
+        get(chaos[s], "not_converged", false) && error("Molecule with SMILES '$(s)' marked not converged in the CHAOS database")
+        chaos[s]
+    end
+end
 
-function create_chaos_json(path; do_save=true)
+# dense sigma profile from its sparse database representation
+function sigma_profile(sigma, scale=1.0)
+    p = zeros(51)
+    p[sigma["idx"]] .= sigma["val"] .* scale
+    return p
+end
+
+function create_chaos_json(path)
     # The database is keyed by canonicalized SMILES and looked up with `canonicalize` too, so
     # building it without `RDKitMinimalLib.jl` yields keys that no lookup can ever match.
     _canonicalize[] === _canonicalize_fallback && error("""
@@ -179,11 +191,9 @@ function create_chaos_json(path; do_save=true)
         i % 5000 == 0 && @info "  converted $(i)/$(length(filelist)) molecules"
     end
 
-    if do_save
-        for (_chaos, _path) in zip((chaos_id,chaos_cosmo02,chaos_cosmo10),(CHAOS_PATH_ID,CHAOS_PATH_COSMO02,CHAOS_PATH_COSMO10))
-            open(_path, "w") do io
-                JSON.print(io, _chaos)
-            end
+    for (_chaos, _path) in zip((chaos_id,chaos_cosmo02,chaos_cosmo10),(CHAOS_PATH_ID,CHAOS_PATH_COSMO02,CHAOS_PATH_COSMO10))
+        open(_path, "w") do io
+            JSON.print(io, _chaos)
         end
     end
 
@@ -228,12 +238,7 @@ function add_mol_to_chaos_cosmo10!(chaos, mol)
     return _add_mol_to_chaos!(chaos, mol, name_section)
 end
 
-# accepts either a path to a CHAOS molecule file or an already parsed one
-_chaos_mol(mol::AbstractString) = JSON.parsefile(mol)
-_chaos_mol(mol) = mol
-
 function _add_mol_to_chaos!(chaos, mol, name_section)
-    mol = _chaos_mol(mol)
     smiles = canonicalize(mol["general"]["CanonicalSMILES"])
     chaos[smiles] = Dict(name => _save_dict(mol, section, name) for (name,section) in name_section)
     return nothing
@@ -241,8 +246,9 @@ end
 
 function _save_dict(mol, section, name)
     if startswith(name, "Sigma")
-        _s_arr = sparse(_narrow(mol[section][name]))
-        return Dict("idx" => _s_arr.nzind, "val" => _narrow(_s_arr.nzval))
+        v = _narrow(mol[section][name])
+        idx = findall(!iszero, v)
+        return Dict("idx" => idx, "val" => v[idx])
     else
         return _narrow(mol[section][name])
     end
