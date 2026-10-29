@@ -16,7 +16,7 @@ const CHAOS_URL = "https://zenodo.org/records/18701299/files/CHAOS_v2.zip?downlo
 
 # Converted databases (~60 MB), built from the raw data with `download_chaos(; raw=true)`
 const CHAOS_DB_URL = "https://github.com/se-schmitt/QMThermoProperties.jl/releases/download/db-v2/CHAOS_v2_databases.zip"
-const CHAOS_DB_SHA256 = "7b57eded570420f416126e62799bf1928416761ed52e26459aad98dd6f8e4c8d"
+const CHAOS_DB_SHA256 = "6fff646e9fe76a8470db41e2a45c2c67fd55d45e3ad5a7714750e78af5f6cac7"
 
 # Database location (scratch space, filled in `__init__`)
 DB_PATH = ""
