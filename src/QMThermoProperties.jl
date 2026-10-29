@@ -1,12 +1,11 @@
-module QMIdealModels
+module QMThermoProperties
 
-using JSON, Downloads, SHA, SparseArrays, Scratch, p7zip_jll
+using JSON, Downloads, SHA, Scratch, p7zip_jll
 using Clapeyron
 const CL = Clapeyron
 
 const k_B = 1.380649e-23                # J/K
 const N_A = 6.02214076e23               # mol⁻¹
-const R = k_B * N_A
 const h = 6.62607015e-34                # Js
 const h² = h^2
 const c₀ = 299792458.                   # m/s
@@ -16,7 +15,7 @@ const a0 = 5.29177210545e-11            # Bohr radius
 const CHAOS_URL = "https://zenodo.org/records/18701299/files/CHAOS_v2.zip?download=1"
 
 # Converted databases (~60 MB), built from the raw data with `download_chaos(; raw=true)`
-const CHAOS_DB_URL = "https://github.com/se-schmitt/QMIdealModels.jl/releases/download/db-v2/CHAOS_v2_databases.zip"
+const CHAOS_DB_URL = "https://github.com/se-schmitt/QMThermoProperties.jl/releases/download/db-v2/CHAOS_v2_databases.zip"
 const CHAOS_DB_SHA256 = "7b57eded570420f416126e62799bf1928416761ed52e26459aad98dd6f8e4c8d"
 
 # Database location (scratch space, filled in `__init__`)
@@ -24,10 +23,6 @@ DB_PATH = ""
 CHAOS_PATH_ID = ""
 CHAOS_PATH_COSMO02 = ""
 CHAOS_PATH_COSMO10 = ""
-
-CHAOS_DB_ID = nothing
-CHAOS_DB_COSMO02 = nothing
-CHAOS_DB_COSMO10 = nothing
 
 function __init__()
     global DB_PATH = @get_scratch!("CHAOS")
@@ -39,7 +34,6 @@ end
 
 # Conversions
 const dalton = 1.66053906892e-27        # kg
-const kgm²2uÅ² = 1/1e-20/dalton         # kgm² to uÅ²
 
 include("utils.jl")
 include("qmideal.jl")

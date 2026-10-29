@@ -37,7 +37,7 @@ Ideal model based on data from quantum mechanical (QM) simulations from *Gond et
 
 ## Model Construction Examples
 ```julia
-using QMIdealModels
+using QMThermoProperties
 
 idealmodel = QMIdeal("water")
 idealmodel = QMIdeal(["water","carbon dioxide"])

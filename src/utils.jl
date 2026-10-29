@@ -1,7 +1,7 @@
 # canonicalization
 function _canonicalize_fallback(smiles)
     @warn """
-    SMILES are not canonicalized by `QMIdealModels.jl`!
+    SMILES are not canonicalized by `QMThermoProperties.jl`!
     Either ensure that the used SMILES are canonicalized or load `RDKitMinimalLib.jl` (not working on Windows).
     """ maxlog=1
     return smiles
@@ -24,7 +24,7 @@ get_mw(smiles) = _get_mw[](smiles)
 """
     download_chaos(; force=false, raw=false)
 
-Make the CHAOS database available to `QMIdealModels.jl`. The databases are stored in a
+Make the CHAOS database available to `QMThermoProperties.jl`. The databases are stored in a
 scratch space and persist across sessions; call this once before building any model.
 
 By default the already converted databases (~60 MB) are downloaded from
