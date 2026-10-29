@@ -28,8 +28,8 @@ end
 ## Input parameters
 
 - `components`: Component names
-- `userlocation`: path of local database or `NamedTuple` defining the parameters
-- `reference-state`: see [`Clapeyron.jl`](https://clapeyronthermo.github.io/Clapeyron.jl/stable/properties/basic/#Reference-States)
+- `userlocations`: path of local database or `NamedTuple` defining the parameters
+- `reference_state`: see [`Clapeyron.jl`](https://clapeyronthermo.github.io/Clapeyron.jl/stable/properties/basic/#Reference-States)
 - `vib_correction`: correction factor for vibrational frequencies (see Ref. (1) for details)
 
 ## Description
@@ -66,28 +66,8 @@ function QMIdeal(components;
     _params = CL.getparams(components,CL.default_locations(QMIdeal);
         userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles", "Mw"])
 
-    smiles = [
-        _params["canonicalsmiles"].ismissingvalues[i] ?
-        canonicalize.(_params["SMILES"].values[i]) :
-        _params["canonicalsmiles"].values[i]
-    for i in eachindex(_components)]
+    _chaos_entries = chaos_entries(load_chaos(CHAOS_PATH_ID), _params, length(_components))
 
-    # Load CHAOS db (if not already loaded)
-    if isnothing(CHAOS_DB_ID)
-        chaos = load_chaos_id()
-        global CHAOS_DB_ID = chaos
-    else
-        chaos = CHAOS_DB_ID
-    end
-    
-    # Check availability
-    for s in smiles
-        s in keys(chaos) || error("Molecule with SMILES '$(s)' not found in CHAOS database")
-        !chaos[s]["not_converged"] || error("Molecule with SMILES '$(s)' marked not converged in the CHAOS database")
-    end
-
-    # Create QM parameters
-    _chaos_entries = [chaos[s] for s in smiles]
     ν = SingleParam(
         "frequencies in s⁻¹",
         _components,

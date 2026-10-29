@@ -1,4 +1,4 @@
-default_locations_cosmo_chaos() = ["properties/identifiers.csv", "properties/molarmass.csv"]
+default_locations_cosmo_chaos() = ["properties/identifiers.csv"]
 
 """
     COSMOSAC02_CHAOS(components;
@@ -33,32 +33,13 @@ function COSMOSAC02_CHAOS(components;
     _components = CL.format_components(components)
     
     _params = CL.getparams(components, default_locations_cosmo_chaos();
-        userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles", "Mw"])
+        userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles"])
 
-    smiles = [
-        _params["canonicalsmiles"].ismissingvalues[i] ?
-        canonicalize.(_params["SMILES"].values[i]) :
-        _params["canonicalsmiles"].values[i]
-    for i in eachindex(_components)]
+    entries = chaos_entries(load_chaos(CHAOS_PATH_COSMO02), _params, length(_components))
 
-    # Load CHAOS db (if not already loaded)
-    if isnothing(CHAOS_DB_COSMO02)
-        chaos = load_chaos_cosmo02()
-        global CHAOS_DB_COSMO02 = chaos
-    else
-        chaos = CHAOS_DB_COSMO02
-    end
-
-    # Parse parameters
-    _A = zeros(length(_components))
-    _V = zeros(length(_components))
-    _Pi = [zeros(51) for i in 1:length(_components)]
-    
-    for (i,s) in enumerate(smiles)
-        _A[i] = chaos[s]["CavArea"] * a0^2 / 1e-20
-        _V[i] = chaos[s]["CavVolume"] * a0^3 / 1e-30
-        setindex!.(Ref(_Pi[i]), chaos[s]["Sigma_total"]["val"], chaos[s]["Sigma_total"]["idx"])
-    end
+    _A = [e["CavArea"] * a0^2 / 1e-20 for e in entries]
+    _V = [e["CavVolume"] * a0^3 / 1e-30 for e in entries]
+    _Pi = [sigma_profile(e["Sigma_total"]) for e in entries]
     A = SingleParam("A",_components,_A)
     V = SingleParam("V",_components,_V)
     Pi = SingleParam("Pi",_components,_Pi)
@@ -107,37 +88,15 @@ function COSMOSAC10_CHAOS(components;
     _components = CL.format_components(components)
     
     _params = CL.getparams(components, default_locations_cosmo_chaos();
-        userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles", "Mw"])
+        userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles"])
 
-    smiles = [
-        _params["canonicalsmiles"].ismissingvalues[i] ?
-        canonicalize.(_params["SMILES"].values[i]) :
-        _params["canonicalsmiles"].values[i]
-    for i in eachindex(_components)]
+    entries = chaos_entries(load_chaos(CHAOS_PATH_COSMO10), _params, length(_components))
 
-    # Load CHAOS db (if not already loaded)
-    if isnothing(CHAOS_DB_COSMO10)
-        chaos = load_chaos_cosmo10()
-        global CHAOS_DB_COSMO10 = chaos
-    else
-        chaos = CHAOS_DB_COSMO10
-    end
-
-    # Parse parameters
-    _A = zeros(length(_components))
-    _V = zeros(length(_components))
-    _Pnhb = [zeros(51) for i in 1:length(components)]
-    _POH = [zeros(51) for i in 1:length(components)]
-    _POT = [zeros(51) for i in 1:length(components)]
-    
-    for (i,s) in enumerate(smiles)
-        _A[i] = chaos[s]["CavArea"] * a0^2 / 1e-20
-        _V[i] = chaos[s]["CavVolume"] * a0^3 / 1e-30
-        _f = chaos[s]["Fraction_PartSigmas"]
-        setindex!.(Ref(_Pnhb[i]), chaos[s]["Sigma_NHB"]["val"].*_A[i].*_f[1], chaos[s]["Sigma_NHB"]["idx"])
-        setindex!.(Ref(_POH[i]), chaos[s]["Sigma_OH"]["val"].*_A[i].*_f[2], chaos[s]["Sigma_OH"]["idx"])
-        setindex!.(Ref(_POT[i]), chaos[s]["Sigma_OT"]["val"].*_A[i].*_f[3], chaos[s]["Sigma_OT"]["idx"])
-    end
+    _A = [e["CavArea"] * a0^2 / 1e-20 for e in entries]
+    _V = [e["CavVolume"] * a0^3 / 1e-30 for e in entries]
+    _Pnhb = [sigma_profile(e["Sigma_NHB"], A*e["Fraction_PartSigmas"][1]) for (e,A) in zip(entries,_A)]
+    _POH = [sigma_profile(e["Sigma_OH"], A*e["Fraction_PartSigmas"][2]) for (e,A) in zip(entries,_A)]
+    _POT = [sigma_profile(e["Sigma_OT"], A*e["Fraction_PartSigmas"][3]) for (e,A) in zip(entries,_A)]
     A = SingleParam("A",_components,_A)
     V = SingleParam("V",_components,_V)
     Pnhb = SingleParam("Pnhb", _components, _Pnhb)
