@@ -5,7 +5,6 @@ abstract type QMIdealModel <: IdealModel end
     σ::SingleParam{TI}
     I::SingleParam{Vector{TF}}
     ω₀::SingleParam{TI}
-    is_linear::SingleParam{Bool}
     reference_state::ReferenceState
     Mw::SingleParam{TF}
 end
@@ -66,44 +65,17 @@ function QMIdeal(components;
     _params = CL.getparams(components,CL.default_locations(QMIdeal);
         userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles", "Mw"])
 
-    _chaos_entries = chaos_entries(load_chaos(CHAOS_PATH_ID), _params, length(_components))
+    entries = chaos_entries(load_chaos(CHAOS_PATH_ID), _params, length(_components))
 
-    ν = SingleParam(
-        "frequencies in s⁻¹",
-        _components,
-        [_entry["Frequencies"].*(1e2*c₀) for _entry in _chaos_entries] .* vib_correction
-    )
-    σ = SingleParam(
-        "rotational symmetry number",
-        _components,
-        [_entry["SymNumber"] for _entry in _chaos_entries]
-    )
     _k = h / (8*π^2) * 1e-9 / (dalton * 1e-20)
-    I = SingleParam(
-        "moments of inertia in u Å²",
-        _components,
-        [_k ./ _entry["RotConst"] for _entry in _chaos_entries]
-    )
-    ω₀ = SingleParam(
-        "spin multiplicity",
-        _components,
-        [_entry["Multiplicity"] for _entry in _chaos_entries]
-    )
-    is_linear = SingleParam(
-        "molecule is linear",
-        _components,
-        [length(i) == 1 for i in I]
-    )
-    _Mw = [
-        _params["Mw"].ismissingvalues[i] ?
-        get_mw(_params["SMILES"].values[i]) :
-        _params["Mw"].values[i]
-    for i in eachindex(_components)]
-    Mw = SingleParam("molecular mass in g mol⁻¹", _components, _Mw)
+    ν = SingleParam("ν", _components, [e["Frequencies"] .* (1e2*c₀*vib_correction) for e in entries])
+    σ = SingleParam("σ", _components, [e["SymNumber"] for e in entries])
+    I = SingleParam("I", _components, [_k ./ e["RotConst"] for e in entries])
+    ω₀ = SingleParam("ω₀", _components, [e["Multiplicity"] for e in entries])
+    Mw = SingleParam("Mw", _components, [_params["Mw"].ismissingvalues[i] ? get_mw(_params["SMILES"].values[i]) : _params["Mw"].values[i] for i in eachindex(_components)])
 
-    params = QMIdealParam(; ν, I, σ, ω₀, is_linear, reference_state=ReferenceState(), Mw)
-
-    references = String["Gond et al., to be published."]
+    params = QMIdealParam(; ν, I, σ, ω₀, reference_state=ReferenceState(), Mw)
+    references = String["10.48550/arXiv.2511.19002"]
 
     model = QMIdeal(_components, params, references)
     CL.set_reference_state!(model, reference_state; verbose)
@@ -112,10 +84,10 @@ function QMIdeal(components;
 end
 
 function CL.a_ideal(model::QMIdeal, V, T, z)
-    (; ν, σ, I, ω₀, is_linear, Mw) = model.params
+    (; ν, σ, I, ω₀, Mw) = model.params
     a = zero(V+T+first(z))
     for i ∈ CL.@comps
-        ln_q_rot = ln_partition_function_rot(T, σ[i], I[i], is_linear[i])
+        ln_q_rot = ln_partition_function_rot(T, σ[i], I[i])
         ln_q_vib = ln_partition_function_vib(T, ν[i])
         ln_q_elec = log(ω₀[i])
         a += CL.xlogx(z[i], N_A*thermal_wavelength³(T, Mw[i]/1000)/V) - z[i]*(ln_q_rot + ln_q_vib + ln_q_elec)

@@ -4,9 +4,9 @@ function thermal_wavelength³(T, Mw)
 end
 
 # rotational
-function ln_partition_function_rot(T, σ, I, is_linear)
+function ln_partition_function_rot(T, σ, I)
     θ = 8*π^2*k_B/h² * T * (dalton * 1e-20)
-    is_linear && return log(θ * I[1] / σ)
+    length(I) == 1 && return log(θ * I[1] / σ)
     return log(sqrt(π * θ^3 * prod(I)) / σ)
 end
 
