@@ -112,21 +112,13 @@ function QMIdeal(components;
 end
 
 function CL.a_ideal(model::QMIdeal, V, T, z)
-    ∑z = sum(z)
-    x = z ./ ∑z
+    (; ν, σ, I, ω₀, is_linear, Mw) = model.params
     a = zero(V+T+first(z))
-
-    ν, σ, I, ω₀, is_linear, Mw = getfield.(getfield.(Ref(model.params), (:ν,:σ,:I,:ω₀,:is_linear,:Mw)),:values)
-    g_el = [1]
-
-    @inbounds for i ∈ CL.@comps
-        ln_q_trans = ln_partition_function_trans(z[i]/V, T, Mw[i]/1000)
-        ln_q_rot = ln_partition_function_rot(T, σ[i], I[i], Val(is_linear[i]))
+    for i ∈ CL.@comps
+        ln_q_rot = ln_partition_function_rot(T, σ[i], I[i], is_linear[i])
         ln_q_vib = ln_partition_function_vib(T, ν[i])
         ln_q_elec = log(ω₀[i])
-
-        a -= x[i]*(ln_q_trans + ln_q_rot + ln_q_vib + ln_q_elec + 1)
+        a += CL.xlogx(z[i], N_A*thermal_wavelength³(T, Mw[i]/1000)/V) - z[i]*(ln_q_rot + ln_q_vib + ln_q_elec)
     end
-
-    return a*∑z
+    return a/sum(z) - 1
 end
