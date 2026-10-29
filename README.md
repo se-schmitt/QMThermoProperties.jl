@@ -20,14 +20,7 @@ Pkg.add(url="https://github.com/se-schmitt/QMThermoProperties.jl")
 Pkg.add(["Clapeyron", "RDKitMinimalLib"])   # RDKitMinimalLib is optional, see below
 ```
 
-Before building the first model, download the CHAOS data once (~60 MB):
-
-```julia
-using QMThermoProperties
-QMThermoProperties.download_chaos()
-```
-
-The data is stored in a Julia [scratch space](https://github.com/JuliaPackaging/Scratch.jl) and persists across sessions and package updates. See [CHAOS database](#chaos-database) for details.
+The CHAOS data (~60 MB) is downloaded automatically when the first model is built. It is stored in a Julia [scratch space](https://github.com/JuliaPackaging/Scratch.jl) and persists across sessions and package updates. See [CHAOS database](#chaos-database) for details.
 
 ### RDKit (optional)
 
@@ -161,10 +154,6 @@ zpe(QMIdeal("water"))                              # J mol⁻¹
 zpe(QMIdeal(["water", "ethanol"]), [0.5, 0.5])     # J for 0.5 mol each
 ```
 
-### Validation
-
-The test suite compares zero-point energy, heat capacity, entropy and thermal energy against Gaussian thermochemistry output (`vib_correction = 1`) for molecules from O₂ to pentacyclic aromatics, with agreement better than 0.05 %.
-
 ## COSMO-SAC activity coefficient models
 
 ```julia
@@ -203,10 +192,6 @@ COSMOSAC02_CHAOS(["toluene", "ethanol"];
     userlocations = (; SMILES = ["CC1=CC=CC=C1", "CCO"]),
     puremodel = PCSAFT)
 ```
-
-## CHAOS database
-
-The CHAOS database (~60 MB) is loaded lazily, at the first model construction in a session and save in `.julia/scratchspaces/`. If the package was removed, the database is automatically removed together by `Pkg.gc()`.
 
 ## References
 

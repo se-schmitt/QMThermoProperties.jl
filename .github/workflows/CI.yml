@@ -37,6 +37,4 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@v1
-      - name: Download CHAOS database
-        run: julia --project=. -e 'using QMThermoProperties; QMThermoProperties.download_chaos()'
       - uses: julia-actions/julia-runtest@v1

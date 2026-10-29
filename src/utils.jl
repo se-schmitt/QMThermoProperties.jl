@@ -25,7 +25,8 @@ get_mw(smiles) = _get_mw[](smiles)
     download_chaos(; force=false, raw=false)
 
 Make the CHAOS database available to `QMThermoProperties.jl`. The databases are stored in a
-scratch space and persist across sessions; call this once before building any model.
+scratch space and persist across sessions. This is called automatically when the first model
+is built, so calling it manually is only needed to download in advance or to refresh the data.
 
 By default the already converted databases (~60 MB) are downloaded from
 [the release assets]($(CHAOS_DB_URL)) and their checksum is verified.
@@ -138,7 +139,7 @@ const _chaos_cache = Dict{String,Any}()
 
 function load_chaos(path)
     return get!(_chaos_cache, path) do
-        isfile(path) || error("CHAOS database not found at $(path)! Download CHAOS database with `QMThermoProperties.download_chaos()`")
+        isfile(path) || download_chaos()
         JSON.parsefile(path)
     end
 end
