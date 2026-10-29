@@ -110,10 +110,6 @@ function bundle_chaos(out=joinpath(DB_PATH, "CHAOS_databases.zip"))
 end
 
 function _verify_sha256(path, expected)
-    if isempty(expected)
-        @warn "No checksum pinned in `CHAOS_DB_SHA256`; skipping verification of $(basename(path))."
-        return nothing
-    end
     got = bytes2hex(open(sha256, path))
     got == expected || error("""
         Checksum mismatch for $(basename(path)):
@@ -176,73 +172,37 @@ function create_chaos_json(path)
     # molecule files are named `<id>.json`; the archive also ships e.g. `DICT_SMILES_TO_ID.json`
     filelist = filter(_s -> !isnothing(match(r"^\d+\.json$", _s)), readdir(path))
 
-    chaos_id = Dict{String,Any}()
-    chaos_cosmo02 = Dict{String,Any}()
-    chaos_cosmo10 = Dict{String,Any}()
+    dbs = Tuple(Dict{String,Any}() for _ in CHAOS_DB_PROPS)
     for (i,file) in enumerate(filelist)
         mol = JSON.parsefile(joinpath(path, file))     # parse once, feed all three databases
         if !haskey(mol, "general")
             @warn "Skipping '$(file)': not a CHAOS molecule file"
             continue
         end
-        add_mol_to_chaos_id!(chaos_id, mol)
-        add_mol_to_chaos_cosmo02!(chaos_cosmo02, mol)
-        add_mol_to_chaos_cosmo10!(chaos_cosmo10, mol)
+        smiles = canonicalize(mol["general"]["CanonicalSMILES"])
+        for (db, props) in zip(dbs, CHAOS_DB_PROPS)
+            db[smiles] = Dict(name => _save_dict(mol, section, name) for (name,section) in props)
+        end
         i % 5000 == 0 && @info "  converted $(i)/$(length(filelist)) molecules"
     end
 
-    for (_chaos, _path) in zip((chaos_id,chaos_cosmo02,chaos_cosmo10),(CHAOS_PATH_ID,CHAOS_PATH_COSMO02,CHAOS_PATH_COSMO10))
+    for (db, _path) in zip(dbs, (CHAOS_PATH_ID,CHAOS_PATH_COSMO02,CHAOS_PATH_COSMO10))
         open(_path, "w") do io
-            JSON.print(io, _chaos)
+            JSON.print(io, db)
         end
     end
 
-    return chaos_id, chaos_cosmo02, chaos_cosmo10
+    return dbs
 end
 
-function add_mol_to_chaos_id!(chaos, mol)
-    name_section = [
-        ("MolecularMass", "general"),
-        ("not_converged", "general"),
-        ("RotConst", "structural"),
-        ("SymNumber", "structural"),
-        ("Multiplicity", "electronic"),
-        ("Frequencies", "vibrational"),
-    ]
-
-    return _add_mol_to_chaos!(chaos, mol, name_section)
-end
-
-function add_mol_to_chaos_cosmo02!(chaos, mol)
-    name_section = [
-        ("MolecularMass", "general"),
-        ("CavArea", "solvation"),
-        ("CavVolume", "solvation"),
-        ("Sigma_total", "solvation"),
-    ]
-
-    return _add_mol_to_chaos!(chaos, mol, name_section)
-end
-
-function add_mol_to_chaos_cosmo10!(chaos, mol)
-    name_section = [
-        ("MolecularMass", "general"),
-        ("CavArea", "solvation"),
-        ("CavVolume", "solvation"),
-        ("Fraction_PartSigmas","solvation"),
-        ("Sigma_NHB", "solvation"),
-        ("Sigma_OH", "solvation"),
-        ("Sigma_OT", "solvation"),
-    ]
-
-    return _add_mol_to_chaos!(chaos, mol, name_section)
-end
-
-function _add_mol_to_chaos!(chaos, mol, name_section)
-    smiles = canonicalize(mol["general"]["CanonicalSMILES"])
-    chaos[smiles] = Dict(name => _save_dict(mol, section, name) for (name,section) in name_section)
-    return nothing
-end
+# (name, section) of the properties kept in the ID, COSMO02 and COSMO10 databases
+const CHAOS_DB_PROPS = (
+    [("MolecularMass","general"), ("not_converged","general"), ("RotConst","structural"),
+     ("SymNumber","structural"), ("Multiplicity","electronic"), ("Frequencies","vibrational")],
+    [("MolecularMass","general"), ("CavArea","solvation"), ("CavVolume","solvation"), ("Sigma_total","solvation")],
+    [("MolecularMass","general"), ("CavArea","solvation"), ("CavVolume","solvation"), ("Fraction_PartSigmas","solvation"),
+     ("Sigma_NHB","solvation"), ("Sigma_OH","solvation"), ("Sigma_OT","solvation")],
+)
 
 function _save_dict(mol, section, name)
     if startswith(name, "Sigma")
