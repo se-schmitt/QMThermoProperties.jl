@@ -1,6 +1,6 @@
 module RDKitMinimalLibExt
 
-using QMIdealModels
+using QMThermoProperties
 using RDKitMinimalLib: RDKitMinimalLib as RDK
 
 function _mol(smiles)
@@ -14,8 +14,8 @@ _canonicalize_rdk(smiles) = RDK.get_smiles(_mol(smiles))
 _get_mw_rdk(smiles) = RDK.get_descriptors(_mol(smiles))["amw"]
 
 function __init__()
-    QMIdealModels._canonicalize[] = _canonicalize_rdk
-    QMIdealModels._get_mw[] = _get_mw_rdk
+    QMThermoProperties._canonicalize[] = _canonicalize_rdk
+    QMThermoProperties._get_mw[] = _get_mw_rdk
     return nothing
 end
 

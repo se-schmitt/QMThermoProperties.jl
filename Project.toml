@@ -1,4 +1,4 @@
-name = "QMIdealModels"
+name = "QMThermoProperties"
 uuid = "6416e0ca-af8c-44ef-9b80-2db8f8db70be"
 version = "1.0.0-DEV"
 authors = ["Sebastian Schmitt <se.s.schmitt@gmail.com> and contributors"]
@@ -7,7 +7,9 @@ authors = ["Sebastian Schmitt <se.s.schmitt@gmail.com> and contributors"]
 Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+Scratch = "6c6a2e73-6563-6170-7368-637461726353"
+p7zip_jll = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 
 [weakdeps]
 RDKitMinimalLib = "44044271-7623-48dc-8250-42433c44e4b7"
@@ -20,13 +22,13 @@ Clapeyron = "0.6.14"
 Downloads = "1.6.0"
 JSON = "0.21.4,1"
 RDKitMinimalLib = "1.2.1"
-SparseArrays = "1"
+SHA = "0.7,1"
+Scratch = "1"
 julia = "1.10"
 
 [extras]
-Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 
 [targets]
-test = ["Test", "TestItemRunner", "Clapeyron", "RDKitMinimalLib"]
+test = ["Test", "TestItemRunner", "RDKitMinimalLib"]

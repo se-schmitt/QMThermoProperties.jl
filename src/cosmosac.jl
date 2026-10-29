@@ -1,4 +1,4 @@
-default_locations_cosmo_chaos() = ["properties/identifiers.csv", "properties/molarmass.csv"]
+default_locations_cosmo_chaos() = ["properties/identifiers.csv"]
 
 """
     COSMOSAC02_CHAOS(components;
@@ -8,19 +8,33 @@ default_locations_cosmo_chaos() = ["properties/identifiers.csv", "properties/mol
     verbose = false,
     reference_state = nothing)
 
-## Input parameters:
-- `Pi` :Single Parameter{String} 
-- `V`: Single Parameter{Float64}
-- `A`: Single Parameter{Float64}
+## Input parameters
+
+- `SMILES`: Single Parameter (`String`) - SMILES representation of the components (canonicalized using RDKit)
+- `canonicalsmiles`: Single Parameter (`String`) (Optional) - canonical SMILES (RDKit), used instead of `SMILES` if given
+
+## Input models
+
+- `puremodel`: model to calculate pure pressure-dependent properties
 
 ## Description
-An activity coefficient model using molecular solvation based on the COSMO-RS method. Sigma profiles are taken from the CHAOS database (see Gond et al. (2025)).
- 
-## References
-1.  A. Klamt: Conductor-like Screening Model for Real Solvents: A New Approach to the Quantitative Calculation of Solvation Phenomena, J. Phys. Chem. 99 (1995) 2224–2235, DOI: https://doi.org/10.1021/j100007a062.
-2.  S.-T. Lin and S. I. Sandler: A Priori Phase Equilibrium Prediction from a Segment Contribution Solvation Model, Ind. Eng. Chem. Res. 41 (2002) 899–913, DOI: https://doi.org/10.1021/ie001047w.
-3.  D. Gond, J. Arweiler, T. Specht, H. Hasse, and F. Jirasek: CHAOS - A Consistent Large-Scale Database for Sigma-Profiles and Other Molecular Descriptors, (2025), DOI: https://doi.org/10.48550/arXiv.2511.19002.
 
+Constructs a `COSMOSAC02` model (COSMO-SAC 2002) with the parameters (`Pi`, `V`, `A`) taken from the CHAOS database [1].
+See [`COSMOSAC02`](https://clapeyronthermo.github.io/Clapeyron.jl/stable/eos/activity/#Clapeyron.COSMOSAC02) in the Clapeyron.jl documentation for details on the model and its references.
+
+The molecules are identified in CHAOS by their canonical SMILES, which requires `RDKitMinimalLib.jl` to be loaded (unless `canonicalsmiles` is given).
+
+## Model Construction Examples
+```julia
+using QMThermoProperties, Clapeyron, RDKitMinimalLib
+
+model = COSMOSAC02_CHAOS(["toluene","ethanol"])
+model = COSMOSAC02_CHAOS(["toluene","ethanol"]; userlocations = (; SMILES = ["CC1=CC=CC=C1","CCO"]))
+```
+
+## References
+
+1. Gond, D., Arweiler, J., Specht, T., Hasse, H., & Jirasek, F. (2025). CHAOS – A consistent large-scale database for sigma-profiles and other molecular descriptors. arXiv:2511.19002. [doi:10.48550/arXiv.2511.19002](https://doi.org/10.48550/arXiv.2511.19002)
 """
 function COSMOSAC02_CHAOS(components;
     puremodel = PR,
@@ -33,32 +47,13 @@ function COSMOSAC02_CHAOS(components;
     _components = CL.format_components(components)
     
     _params = CL.getparams(components, default_locations_cosmo_chaos();
-        userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles", "Mw"])
+        userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles"])
 
-    smiles = [
-        _params["canonicalsmiles"].ismissingvalues[i] ?
-        canonicalize.(_params["SMILES"].values[i]) :
-        _params["canonicalsmiles"].values[i]
-    for i in eachindex(_components)]
+    entries = chaos_entries(load_chaos(CHAOS_PATH_COSMO02), _params, length(_components))
 
-    # Load CHAOS db (if not already loaded)
-    if isnothing(CHAOS_DB_COSMO02)
-        chaos = load_chaos_cosmo02()
-        global CHAOS_DB_COSMO02 = chaos
-    else
-        chaos = CHAOS_DB_COSMO02
-    end
-
-    # Parse parameters
-    _A = zeros(length(_components))
-    _V = zeros(length(_components))
-    _Pi = [zeros(51) for i in 1:length(_components)]
-    
-    for (i,s) in enumerate(smiles)
-        _A[i] = chaos[s]["CavArea"] * a0^2 / 1e-20
-        _V[i] = chaos[s]["CavVolume"] * a0^3 / 1e-30
-        setindex!.(Ref(_Pi[i]), chaos[s]["Sigma_total"]["val"], chaos[s]["Sigma_total"]["idx"])
-    end
+    _A = [e["CavArea"] * a0^2 / 1e-20 for e in entries]
+    _V = [e["CavVolume"] * a0^3 / 1e-30 for e in entries]
+    _Pi = [sigma_profile(e["Sigma_total"]) for e in entries]
     A = SingleParam("A",_components,_A)
     V = SingleParam("V",_components,_V)
     Pi = SingleParam("Pi",_components,_Pi)
@@ -80,21 +75,33 @@ end
     verbose = false,
     reference_state = nothing)
 
-## Input parameters:
-- `Pnhb` :Single Parameter{String}
-- `POH` :Single Parameter{String}
-- `POT` :Single Parameter{String}
-- `V`: Single Parameter{Float64}
-- `A`: Single Parameter{Float64}
+## Input parameters
+
+- `SMILES`: Single Parameter (`String`) - SMILES representation of the components (canonicalized using RDKit)
+- `canonicalsmiles`: Single Parameter (`String`) (Optional) - canonical SMILES (RDKit), used instead of `SMILES` if given
+
+## Input models
+
+- `puremodel`: model to calculate pure pressure-dependent properties
 
 ## Description
-An activity coefficient model using molecular solvation based on the COSMO-RS method. Sigma profiles are now split by non-hydrogen bonding, hydrogen acceptor and hydrogen donor. Sigma profiles are taken from the CHAOS database (see Gond et al. (2025)).
- 
+
+Constructs a `COSMOSAC10` model (COSMO-SAC 2010) with the parameters (`Pnhb`, `POH`, `POT`, `V`, `A`) taken from the CHAOS database [1].
+See [`COSMOSAC10`](https://clapeyronthermo.github.io/Clapeyron.jl/stable/eos/activity/#Clapeyron.COSMOSAC10) in the Clapeyron.jl documentation for details on the model and its references.
+
+The molecules are identified in CHAOS by their canonical SMILES, which requires `RDKitMinimalLib.jl` to be loaded (unless `canonicalsmiles` is given).
+
+## Model Construction Examples
+```julia
+using QMThermoProperties, Clapeyron, RDKitMinimalLib
+
+model = COSMOSAC10_CHAOS(["toluene","ethanol"])
+model = COSMOSAC10_CHAOS(["toluene","ethanol"]; userlocations = (; SMILES = ["CC1=CC=CC=C1","CCO"]))
+```
+
 ## References
-1.  A. Klamt: Conductor-like Screening Model for Real Solvents: A New Approach to the Quantitative Calculation of Solvation Phenomena, J. Phys. Chem. 99 (1995) 2224–2235, DOI: https://doi.org/10.1021/j100007a062.
-2.  S.-T. Lin and S. I. Sandler: A Priori Phase Equilibrium Prediction from a Segment Contribution Solvation Model, Ind. Eng. Chem. Res. 41 (2002) 899–913, DOI: https://doi.org/10.1021/ie001047w.
-3.  C.-M. Hsieh, S. I. Sandler, and S.-T. Lin: Improvements of COSMO-SAC for Vapor–Liquid and Liquid–Liquid Equilibrium Predictions, Fluid Phase Equilibria 297 (2010) 90–97, DOI: https://doi.org/10.1016/j.fluid.2010.06.011.
-4.  D. Gond, J. Arweiler, T. Specht, H. Hasse, and F. Jirasek: CHAOS - A Consistent Large-Scale Database for Sigma-Profiles and Other Molecular Descriptors, (2025), DOI: https://doi.org/10.48550/arXiv.2511.19002.
+
+1. Gond, D., Arweiler, J., Specht, T., Hasse, H., & Jirasek, F. (2025). CHAOS – A consistent large-scale database for sigma-profiles and other molecular descriptors. arXiv:2511.19002. [doi:10.48550/arXiv.2511.19002](https://doi.org/10.48550/arXiv.2511.19002)
 """
 function COSMOSAC10_CHAOS(components;
     puremodel = PR,
@@ -107,37 +114,15 @@ function COSMOSAC10_CHAOS(components;
     _components = CL.format_components(components)
     
     _params = CL.getparams(components, default_locations_cosmo_chaos();
-        userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles", "Mw"])
+        userlocations,ignore_headers=["dipprnumber","inchikey","cas"], ignore_missing_singleparams=["canonicalsmiles"])
 
-    smiles = [
-        _params["canonicalsmiles"].ismissingvalues[i] ?
-        canonicalize.(_params["SMILES"].values[i]) :
-        _params["canonicalsmiles"].values[i]
-    for i in eachindex(_components)]
+    entries = chaos_entries(load_chaos(CHAOS_PATH_COSMO10), _params, length(_components))
 
-    # Load CHAOS db (if not already loaded)
-    if isnothing(CHAOS_DB_COSMO10)
-        chaos = load_chaos_cosmo10()
-        global CHAOS_DB_COSMO10 = chaos
-    else
-        chaos = CHAOS_DB_COSMO10
-    end
-
-    # Parse parameters
-    _A = zeros(length(_components))
-    _V = zeros(length(_components))
-    _Pnhb = [zeros(51) for i in 1:length(components)]
-    _POH = [zeros(51) for i in 1:length(components)]
-    _POT = [zeros(51) for i in 1:length(components)]
-    
-    for (i,s) in enumerate(smiles)
-        _A[i] = chaos[s]["CavArea"] * a0^2 / 1e-20
-        _V[i] = chaos[s]["CavVolume"] * a0^3 / 1e-30
-        _f = chaos[s]["Fraction_PartSigmas"]
-        setindex!.(Ref(_Pnhb[i]), chaos[s]["Sigma_NHB"]["val"].*_A[i].*_f[1], chaos[s]["Sigma_NHB"]["idx"])
-        setindex!.(Ref(_POH[i]), chaos[s]["Sigma_OH"]["val"].*_A[i].*_f[2], chaos[s]["Sigma_OH"]["idx"])
-        setindex!.(Ref(_POT[i]), chaos[s]["Sigma_OT"]["val"].*_A[i].*_f[3], chaos[s]["Sigma_OT"]["idx"])
-    end
+    _A = [e["CavArea"] * a0^2 / 1e-20 for e in entries]
+    _V = [e["CavVolume"] * a0^3 / 1e-30 for e in entries]
+    _Pnhb = [sigma_profile(e["Sigma_NHB"], A*e["Fraction_PartSigmas"][1]) for (e,A) in zip(entries,_A)]
+    _POH = [sigma_profile(e["Sigma_OH"], A*e["Fraction_PartSigmas"][2]) for (e,A) in zip(entries,_A)]
+    _POT = [sigma_profile(e["Sigma_OT"], A*e["Fraction_PartSigmas"][3]) for (e,A) in zip(entries,_A)]
     A = SingleParam("A",_components,_A)
     V = SingleParam("V",_components,_V)
     Pnhb = SingleParam("Pnhb", _components, _Pnhb)

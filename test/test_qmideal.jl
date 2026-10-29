@@ -34,6 +34,14 @@
         end
     end
 
+    @testset "Mixtures" begin
+        model = QMIdeal(["water","carbon dioxide"])
+        z = [0.3,0.7]
+        @test Clapeyron.VT_helmholtz_energy(model, 2v, T, 2z) ≈ 2*Clapeyron.VT_helmholtz_energy(model, v, T, z) rtol=1e-12
+        @test isfinite(Clapeyron.VT_helmholtz_energy(model, v, T, [0.,1.]))
+        @test Clapeyron.VT_entropy(model, v, T, [0.,1.]) ≈ Clapeyron.VT_entropy(QMIdeal("carbon dioxide"), v, T) rtol=1e-12
+    end
+
     @testset "Gaussian" begin
         p = 101325.             # Pa
         T = 298.15              # K

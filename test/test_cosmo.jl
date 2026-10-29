@@ -17,4 +17,7 @@
     @test γ02[2] ≈ 1.078574899399766 rtol=1e-8
     @test γ10[1] ≈ 1.875489492607190 rtol=1e-8
     @test γ10[2] ≈ 1.084077874193272 rtol=1e-8
+
+    @test COSMOSAC10_CHAOS("ethanol"; userlocations=(;SMILES=["CCO"])) isa COSMOSAC10
+    @test_throws ErrorException COSMOSAC02_CHAOS("xenon"; userlocations=(;SMILES=["[Xe]"]))
 end
