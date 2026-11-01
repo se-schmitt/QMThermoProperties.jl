@@ -17,8 +17,13 @@ All models are regular Clapeyron models: every Clapeyron property and equilibriu
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/se-schmitt/QMThermoProperties.jl")
-Pkg.add(["Clapeyron", "RDKitMinimalLib"])   # RDKitMinimalLib is optional, see below
+Pkg.add("QMThermoProperties")
+```
+
+or in package mode:
+
+```julia
+pkg> add QMThermoProperties
 ```
 
 The CHAOS data (~60 MB) is downloaded automatically when the first model is built. It is stored in a Julia [scratch space](https://github.com/JuliaPackaging/Scratch.jl) and persists across sessions and package updates. See [CHAOS database](#chaos-database) for details.
