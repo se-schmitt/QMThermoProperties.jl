@@ -1,6 +1,7 @@
 # QMThermoProperties.jl
 
 [![Build Status](https://github.com/se-schmitt/QMThermoProperties.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/se-schmitt/QMThermoProperties.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/se-schmitt/QMThermoProperties.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/se-schmitt/QMThermoProperties.jl)
 
 Thermodynamic models built from quantum-mechanical (QM) molecular data in the [CHAOS database](https://doi.org/10.48550/arXiv.2511.19002), for use with [Clapeyron.jl](https://github.com/ClapeyronThermo/Clapeyron.jl).
 
