@@ -1,11 +1,12 @@
 @testitem "COSMOSAC" begin
-    using Clapeyron, RDKitMinimalLib
+    using Clapeyron
 
-    smiles = ["CC1=CC=CC=C1", "CCO"]
+    smiles = ["Cc1ccccc1", "CCO"]
     names = ["toluene", "ethanol"]
+    mw = [92.14099, 46.069]
 
-    model02 = COSMOSAC02_CHAOS(names; userlocations=(;SMILES=smiles))
-    model10 = COSMOSAC10_CHAOS(names; userlocations=(;SMILES=smiles))
+    model02 = COSMOSAC02_CHAOS(names; userlocations=(;SMILES=smiles, Mw=mw))
+    model10 = COSMOSAC10_CHAOS(names; userlocations=(;SMILES=smiles, Mw=mw))
 
     T = 300.
     p = 1e5
