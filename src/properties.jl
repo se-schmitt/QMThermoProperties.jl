@@ -14,3 +14,5 @@ function zpe(model, z=CL.SA[1.0])
     ϵ = sqrt(eps(Float64))
     return helmholtz_energy(model, 1., ϵ, z)
 end
+
+const zero_point_energy = zpe

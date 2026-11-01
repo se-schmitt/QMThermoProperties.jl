@@ -41,6 +41,6 @@ include("partition_functions.jl")
 include("properties.jl")
 include("cosmosac.jl")
 
-export QMIdeal, COSMOSAC02_CHAOS, COSMOSAC10_CHAOS, zpe
+export QMIdeal, COSMOSAC02_CHAOS, COSMOSAC10_CHAOS, zpe, zero_point_energy
 
 end
